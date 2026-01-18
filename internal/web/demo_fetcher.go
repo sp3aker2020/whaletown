@@ -1,16 +1,29 @@
 package web
 
 import (
+	"fmt"
+	"os"
+	"time"
+
 	"github.com/speaker20/whaletown/internal/activity"
+	"github.com/speaker20/whaletown/internal/agents/common"
+	"github.com/speaker20/whaletown/internal/agents/copytrade"
 )
 
 // DemoConvoyFetcher returns sample whale-themed data for demo/showcase purposes.
-// This allows the dashboard to show sample data when not in a Whale Town workspace.
-type DemoConvoyFetcher struct{}
+// It also fetches LIVE whale trades when HELIUS_API_KEY is set.
+type DemoConvoyFetcher struct {
+	solanaTracker *copytrade.SolanaTracker
+}
 
 // NewDemoConvoyFetcher creates a demo fetcher with sample data.
 func NewDemoConvoyFetcher() *DemoConvoyFetcher {
-	return &DemoConvoyFetcher{}
+	config := common.DefaultConfig()
+	wallets := common.DefaultTrackedWallets()
+
+	return &DemoConvoyFetcher{
+		solanaTracker: copytrade.NewSolanaTracker(config, wallets),
+	}
 }
 
 // FetchConvoys returns sample whale-themed convoy data.
@@ -144,4 +157,101 @@ func (f *DemoConvoyFetcher) FetchPolecats() ([]PolecatRow, error) {
 			StatusHint: "Backtesting strategy #42",
 		},
 	}, nil
+}
+
+// FetchWhaleTrades fetches live whale trades from the Solana tracker.
+func (f *DemoConvoyFetcher) FetchWhaleTrades() ([]WhaleTradeRow, error) {
+	apiKey := os.Getenv("HELIUS_API_KEY")
+	if apiKey == "" {
+		// Return mock data if no API key
+		return f.mockWhaleTrades(), nil
+	}
+
+	// Fetch real trades
+	trades, err := f.solanaTracker.FetchRecentTrades()
+	if err != nil {
+		return f.mockWhaleTrades(), nil
+	}
+
+	// Convert to WhaleTradeRow format
+	rows := make([]WhaleTradeRow, 0, len(trades))
+	for _, t := range trades {
+		rows = append(rows, WhaleTradeRow{
+			Timestamp:   formatTimeAgo(t.Timestamp),
+			WalletAlias: t.WalletAlias,
+			Type:        t.Type,
+			TokenIn:     t.TokenIn,
+			TokenOut:    t.TokenOut,
+			AmountIn:    formatAmount(t.AmountIn),
+			AmountOut:   formatAmount(t.AmountOut),
+			TxHash:      shortenTx(t.TxHash),
+			TxURL:       fmt.Sprintf("https://solscan.io/tx/%s", t.TxHash),
+			Platform:    t.Platform,
+		})
+	}
+
+	return rows, nil
+}
+
+// mockWhaleTrades returns demo trades when no API key is set.
+func (f *DemoConvoyFetcher) mockWhaleTrades() []WhaleTradeRow {
+	return []WhaleTradeRow{
+		{
+			Timestamp:   "2m ago",
+			WalletAlias: "Memecoin Master",
+			Type:        "swap",
+			TokenIn:     "SOL",
+			TokenOut:    "BONK",
+			AmountIn:    "50.00",
+			AmountOut:   "2.5B",
+			TxHash:      "5abc...mock",
+			TxURL:       "https://solscan.io/tx/mock1",
+			Platform:    "solana",
+		},
+		{
+			Timestamp:   "15m ago",
+			WalletAlias: "TRUMP Whale",
+			Type:        "swap",
+			TokenIn:     "USDC",
+			TokenOut:    "TRUMP",
+			AmountIn:    "10,000",
+			AmountOut:   "5,000",
+			TxHash:      "7def...mock",
+			TxURL:       "https://solscan.io/tx/mock2",
+			Platform:    "solana",
+		},
+	}
+}
+
+// Helper functions
+func formatTimeAgo(t time.Time) string {
+	diff := time.Since(t)
+	if diff < time.Minute {
+		return fmt.Sprintf("%ds ago", int(diff.Seconds()))
+	} else if diff < time.Hour {
+		return fmt.Sprintf("%dm ago", int(diff.Minutes()))
+	} else if diff < 24*time.Hour {
+		return fmt.Sprintf("%dh ago", int(diff.Hours()))
+	}
+	return t.Format("Jan 2")
+}
+
+func formatAmount(amt float64) string {
+	if amt >= 1_000_000_000 {
+		return fmt.Sprintf("%.1fB", amt/1_000_000_000)
+	} else if amt >= 1_000_000 {
+		return fmt.Sprintf("%.1fM", amt/1_000_000)
+	} else if amt >= 1_000 {
+		return fmt.Sprintf("%.1fK", amt/1_000)
+	} else if amt >= 1 {
+		return fmt.Sprintf("%.2f", amt)
+	}
+	return fmt.Sprintf("%.4f", amt)
+}
+
+func shortenTx(tx string) string {
+	if len(tx) <= 12 {
+		return tx
+	}
+	return tx[:4] + "..." + tx[len(tx)-4:]
 }

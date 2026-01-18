@@ -17,10 +17,11 @@ var errFetchFailed = errors.New("fetch failed")
 
 // MockConvoyFetcher is a mock implementation for testing.
 type MockConvoyFetcher struct {
-	Convoys    []ConvoyRow
-	MergeQueue []MergeQueueRow
-	Polecats   []PolecatRow
-	Error      error
+	Convoys     []ConvoyRow
+	MergeQueue  []MergeQueueRow
+	Polecats    []PolecatRow
+	WhaleTrades []WhaleTradeRow
+	Error       error
 }
 
 func (m *MockConvoyFetcher) FetchConvoys() ([]ConvoyRow, error) {
@@ -33,6 +34,10 @@ func (m *MockConvoyFetcher) FetchMergeQueue() ([]MergeQueueRow, error) {
 
 func (m *MockConvoyFetcher) FetchPolecats() ([]PolecatRow, error) {
 	return m.Polecats, nil
+}
+
+func (m *MockConvoyFetcher) FetchWhaleTrades() ([]WhaleTradeRow, error) {
+	return m.WhaleTrades, nil
 }
 
 func TestConvoyHandler_RendersTemplate(t *testing.T) {
@@ -947,9 +952,9 @@ func TestE2E_Server_RefineryInPolecats(t *testing.T) {
 // Test that merge queue and polecat errors are non-fatal
 
 type MockConvoyFetcherWithErrors struct {
-	Convoys          []ConvoyRow
-	MergeQueueError  error
-	PolecatsError    error
+	Convoys         []ConvoyRow
+	MergeQueueError error
+	PolecatsError   error
 }
 
 func (m *MockConvoyFetcherWithErrors) FetchConvoys() ([]ConvoyRow, error) {
@@ -962,6 +967,10 @@ func (m *MockConvoyFetcherWithErrors) FetchMergeQueue() ([]MergeQueueRow, error)
 
 func (m *MockConvoyFetcherWithErrors) FetchPolecats() ([]PolecatRow, error) {
 	return nil, m.PolecatsError
+}
+
+func (m *MockConvoyFetcherWithErrors) FetchWhaleTrades() ([]WhaleTradeRow, error) {
+	return nil, nil
 }
 
 func TestConvoyHandler_NonFatalErrors(t *testing.T) {

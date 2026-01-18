@@ -327,6 +327,17 @@
             color: var(--bg-ocean);
             box-shadow: 0 0 10px rgba(100, 255, 218, 0.3);
         }
+
+        .tx-link {
+            color: var(--whale-blue);
+            text-decoration: none;
+            font-family: 'SF Mono', 'Monaco', monospace;
+            font-size: 0.85rem;
+        }
+
+        .tx-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 
@@ -438,6 +449,39 @@
         {{else}}
         <div class="empty-state">
             <p>🌊 No PRs in the current chamber</p>
+        </div>
+        {{end}}
+
+        <h2 class="section-header"><span class="emoji">🐋</span> Whale Trades (Live Copy Trading)</h2>
+        {{if .WhaleTrades}}
+        <table class="convoy-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Whale</th>
+                    <th>Action</th>
+                    <th>In</th>
+                    <th>Out</th>
+                    <th>Tx</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .WhaleTrades}}
+                <tr>
+                    <td>{{.Timestamp}}</td>
+                    <td><span class="convoy-id">{{.WalletAlias}}</span></td>
+                    <td><span class="work-status"
+                            style="background: var(--whale-blue); color: var(--bg-ocean);">{{.Type}}</span></td>
+                    <td>{{.AmountIn}} {{.TokenIn}}</td>
+                    <td>{{.AmountOut}} {{.TokenOut}}</td>
+                    <td><a href="{{.TxURL}}" target="_blank" class="tx-link">{{.TxHash}}</a></td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        {{else}}
+        <div class="empty-state">
+            <p>🌊 No whale trades detected yet. Set HELIUS_API_KEY to enable live tracking.</p>
         </div>
         {{end}}
 

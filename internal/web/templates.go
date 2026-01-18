@@ -14,9 +14,24 @@ var templateFS embed.FS
 
 // ConvoyData represents data passed to the convoy template.
 type ConvoyData struct {
-	Convoys    []ConvoyRow
-	MergeQueue []MergeQueueRow
-	Polecats   []PolecatRow
+	Convoys     []ConvoyRow
+	MergeQueue  []MergeQueueRow
+	Polecats    []PolecatRow
+	WhaleTrades []WhaleTradeRow // Live whale trade data
+}
+
+// WhaleTradeRow represents a whale's trade in the dashboard.
+type WhaleTradeRow struct {
+	Timestamp   string // Formatted time ago
+	WalletAlias string // e.g., "Memecoin Master"
+	Type        string // "swap", "buy", "sell"
+	TokenIn     string
+	TokenOut    string
+	AmountIn    string // Formatted with units
+	AmountOut   string
+	TxHash      string // Shortened for display
+	TxURL       string // Full Solscan URL
+	Platform    string // "solana", "polymarket"
 }
 
 // PolecatRow represents a polecat worker in the dashboard.

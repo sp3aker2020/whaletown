@@ -30,7 +30,6 @@ func NewLiveConvoyFetcher() (*LiveConvoyFetcher, error) {
 	}, nil
 }
 
-
 // FetchConvoys fetches all open convoys with their activity data.
 func (f *LiveConvoyFetcher) FetchConvoys() ([]ConvoyRow, error) {
 	// List all open convoy-type issues
@@ -752,4 +751,10 @@ func parseActivityTimestamp(s string) (int64, bool) {
 		return 0, false
 	}
 	return unix, true
+}
+
+// FetchWhaleTrades returns empty slice for live fetcher (not implemented yet).
+// The DemoConvoyFetcher provides the real whale trade data.
+func (f *LiveConvoyFetcher) FetchWhaleTrades() ([]WhaleTradeRow, error) {
+	return []WhaleTradeRow{}, nil
 }
