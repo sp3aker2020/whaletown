@@ -1,6 +1,8 @@
-# Whale Town 
+# Whale Town 🐋
 
 **Multi-agent orchestration system for Claude Code with persistent work tracking**
+
+> 🐋 **Fork of [Gas Town](https://github.com/steveyegge/gastown)** by Steve Yegge. Rebranded with whale/ocean theming and terminology.
 
 > *"In the deep waters of Whale Town, the great whales discovered that their bubble nets could trap and carry work across the ocean. The wise Captain learned to harness this power, coordinating Pod Members through the currents, ensuring no task was ever lost to the depths..."*
 
@@ -380,5 +382,11 @@ wt mayor attach
 MIT License - see LICENSE file for details
 
 ---
+
+## Acknowledgments
+
+🐋 **Whale Town** is a themed fork of [**Gas Town**](https://github.com/steveyegge/gastown) by [Steve Yegge](https://github.com/steveyegge).
+
+The original Gas Town project established the foundational architecture for multi-agent orchestration with Claude Code. Whale Town reimagines this powerful system with whale/ocean theming while preserving its robust functionality.
 
 *Made with 🐋 energy from the depths of the digital ocean*
