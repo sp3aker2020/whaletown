@@ -3,17 +3,20 @@ package cmd
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"os/exec"
 	"runtime"
 	"time"
 
+	"github.com/speaker20/whaletown/internal/trader"
 	"github.com/speaker20/whaletown/internal/web"
 	"github.com/spf13/cobra"
 )
 
 var (
-	dashboardPort int
-	dashboardOpen bool
+	dashboardPort       int
+	dashboardOpen       bool
+	dashboardWithAgents bool
 )
 
 var dashboardCmd = &cobra.Command{
@@ -28,20 +31,29 @@ The dashboard shows real-time convoy status with:
 - Last activity indicator (green/yellow/red)
 - Auto-refresh every 30 seconds via htmx
 
+Trading agents can be auto-started with --with-agents flag.
+
 Example:
   wt dashboard              # Start on default port 8080
   wt dashboard --port 3000  # Start on port 3000
-  wt dashboard --open       # Start and open browser`,
+  wt dashboard --open       # Start and open browser
+  wt dashboard --with-agents # Also start trading agents`,
 	RunE: runDashboard,
 }
 
 func init() {
 	dashboardCmd.Flags().IntVar(&dashboardPort, "port", 8080, "HTTP port to listen on")
 	dashboardCmd.Flags().BoolVar(&dashboardOpen, "open", false, "Open browser automatically")
+	dashboardCmd.Flags().BoolVar(&dashboardWithAgents, "with-agents", false, "Auto-start trading agents (researcher + copytrade)")
 	rootCmd.AddCommand(dashboardCmd)
 }
 
 func runDashboard(cmd *cobra.Command, args []string) error {
+	// Auto-start trading agents if requested or if HELIUS_API_KEY is set
+	if dashboardWithAgents || os.Getenv("HELIUS_API_KEY") != "" {
+		startTradingAgents()
+	}
+
 	// Try to create a live fetcher (may fail if not in workspace)
 	var fetcher web.ConvoyFetcher
 	liveFetcher, err := web.NewLiveConvoyFetcher()
@@ -79,6 +91,25 @@ func runDashboard(cmd *cobra.Command, args []string) error {
 		IdleTimeout:       120 * time.Second,
 	}
 	return server.ListenAndServe()
+}
+
+// startTradingAgents starts the researcher and copytrade agents.
+func startTradingAgents() {
+	mgr := trader.NewManager()
+
+	// Start researcher (discovers wallets)
+	if err := mgr.Start(trader.AgentTypeResearcher); err != nil {
+		fmt.Printf("⚠️  Failed to start researcher: %v\n", err)
+	} else {
+		fmt.Println("🔬 Researcher agent started (wallet discovery)")
+	}
+
+	// Start copytrade (tracks whale trades)
+	if err := mgr.Start(trader.AgentTypeCopyTrade); err != nil {
+		fmt.Printf("⚠️  Failed to start copytrade: %v\n", err)
+	} else {
+		fmt.Println("📈 Copy Trade agent started (tracking whales)")
+	}
 }
 
 // openBrowser opens the specified URL in the default browser.
