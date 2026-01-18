@@ -246,6 +246,16 @@ func (f *DemoConvoyFetcher) FetchAgentStatuses() ([]AgentStatusRow, error) {
 			ItemLabel:   "arbs",
 		},
 		{
+			Name:        "safety",
+			DisplayName: "🛡️ Safety Checker",
+			Status:      "coming soon",
+			StatusClass: "agent-soon",
+			LastRun:     "planned",
+			NextRun:     "TBA",
+			ItemCount:   0,
+			ItemLabel:   "audits",
+		},
+		{
 			Name:        "sentiment",
 			DisplayName: "🧠 Sentiment Analysis",
 			Status:      "coming soon",

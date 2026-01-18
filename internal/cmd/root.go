@@ -32,6 +32,7 @@ var beadsExemptCommands = map[string]bool{
 	"completion": true,
 	"dashboard":  true, // Allows running on Render without beads
 	"trader":     true, // Trading agents can run standalone
+	"dig":        true, // Data mining tool
 }
 
 // Commands exempt from the town root branch warning.

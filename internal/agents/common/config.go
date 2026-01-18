@@ -18,6 +18,9 @@ type Config struct {
 	// Example: wss://api.mainnet-beta.solana.com
 	SolanaWSURL string
 
+	// Public Key: (derived from private key)
+	SolanaPrivateKey string
+
 	// Prediction market APIs
 	PolymarketBaseURL string
 	KalshiAPIKey      string
@@ -30,7 +33,8 @@ func DefaultConfig() *Config {
 		HeliusAPIKey:      os.Getenv("HELIUS_API_KEY"),
 		SolanaRPCURL:      os.Getenv("SOLANA_RPC_URL"),
 		SolanaWSURL:       os.Getenv("SOLANA_WS_URL"),
-		PolymarketBaseURL: "https://gamma-api.polymarket.com",
+		SolanaPrivateKey:  os.Getenv("SOLANA_PRIVATE_KEY"),
+		PolymarketBaseURL: "https://clob.polymarket.com",
 		KalshiAPIKey:      os.Getenv("KALSHI_API_KEY"),
 		KalshiAPISecret:   os.Getenv("KALSHI_API_SECRET"),
 	}

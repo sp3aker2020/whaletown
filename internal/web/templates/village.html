@@ -508,25 +508,25 @@
         // Whale Town Village Simulation
 
         const agents = [
-            { id: 'captain', name: 'Satoshi (Capt)', role: 'Strategy Lead 🐋', task: 'Orchestrating trades', status: 'active', x: 300, y: 200, size: 100, isCapt: true },
-            { id: 'alpha', name: 'Alpha', role: 'market-maker', task: 'Scanning ETH/USDC', status: 'active', x: 150, y: 300, size: 60 },
-            { id: 'beta', name: 'Beta', role: 'market-maker', task: 'Calc spread', status: 'active', x: 450, y: 350, size: 55 },
-            { id: 'gamma', name: 'Gamma', role: 'market-maker', task: 'Flash loan exec', status: 'idle', x: 250, y: 450, size: 50 },
-            { id: 'doge', name: 'Doge', role: 'sniper-lab', task: 'Watching mempool', status: 'done', x: 500, y: 250, size: 45 },
-            { id: 'whale', name: 'Whale', role: 'portfolio', task: 'Rebalancing', status: 'active', x: 100, y: 180, size: 50 },
+            { id: 'captain', name: 'Satoshi (Capt)', role: 'Strategy Lead 🐋', task: 'Monitoring Swarm', status: 'active', x: 300, y: 200, size: 100, isCapt: true },
+            { id: 'researcher', name: 'Researcher', role: 'Data Mining ⛏️', task: 'Digging Pump.fun', status: 'active', x: 150, y: 300, size: 65 },
+            { id: 'copytrade', name: 'Copy Trader', role: 'Fast Lane ⚡', task: 'Tracking Whales', status: 'active', x: 450, y: 350, size: 65 },
+            { id: 'sniper', name: 'Sniper', role: 'Mempool', task: 'Coming Soon', status: 'idle', x: 250, y: 450, size: 45 },
+            { id: 'cda', name: 'CDA Strat', role: 'Market Maker', task: 'Planned', status: 'done', x: 500, y: 250, size: 40 },
+            { id: 'sentiment', name: 'Sentiment', role: 'Analysis', task: 'Planned', status: 'done', x: 100, y: 180, size: 40 },
         ];
 
         const bubbleNets = [
-            { title: '🐋 Arbitrage Bot', progress: 75 },
-            { title: '🫧 Meme Sniper', progress: 20 },
-            { title: '🌊 Portfolio', progress: 5 },
+            { title: '⚡ Fast Lane Execution', progress: 100 },
+            { title: '⛏️ Data Mining', progress: 85 },
+            { title: '🎯 Sniper Development', progress: 15 },
         ];
 
         const messages = [
-            { time: '09:42', agent: 'Alpha', msg: 'Arb opportunity found! +0.4%' },
-            { time: '09:41', agent: 'Capt', msg: 'Execute instantly.' },
-            { time: '09:40', agent: 'Doge', msg: 'New pair detected on Solana' },
-            { time: '09:38', agent: 'Beta', msg: 'Liquidity thin, careful' },
+            { time: 'Live', agent: 'CopyTrader', msg: 'Listening for whale signals...' },
+            { time: 'Live', agent: 'Researcher', msg: 'Indexing 6EF8... (Pump.fun)' },
+            { time: 'Live', agent: 'Capt', msg: 'System armed. 0.005 SOL/trade.' },
+            { time: 'Memo', agent: 'Sniper', msg: 'Initializing soon...' },
         ];
 
         const ocean = document.getElementById('ocean');

@@ -7,6 +7,10 @@ import (
 	"sync"
 	"time"
 
+	// Public Key: (derived from private key)
+	// (loaded from config)
+
+	"github.com/gagliardetto/solana-go"
 	"github.com/speaker20/whaletown/internal/agents/common"
 	"github.com/speaker20/whaletown/internal/agents/copytrade"
 	"github.com/speaker20/whaletown/internal/agents/researcher"
@@ -48,6 +52,7 @@ type runningAgent struct {
 	tracker     *copytrade.SolanaTracker
 	polyTracker *copytrade.PolymarketTracker
 	wsListener  *copytrade.WebSocketListener
+	executor    *copytrade.Executor
 }
 
 // NewManager creates a new trading agent manager.
@@ -86,6 +91,14 @@ func (m *Manager) Start(agentType AgentType) error {
 		agent.tracker = copytrade.NewSolanaTracker(m.config, wallets)
 		agent.polyTracker = copytrade.NewPolymarketTracker(m.config, wallets)
 
+		// Initialize Executor (Fast Lane)
+		if exec, err := copytrade.NewExecutor(m.config); err == nil {
+			agent.executor = exec
+			fmt.Println("🚀 Fast Lane Executor Initialized")
+		} else {
+			fmt.Printf("⚠️ Executor init failed: %v\n", err)
+		}
+
 		// Initialize WebSocket Listener for real-time alerts
 		if m.config.SolanaWSURL != "" || m.config.HeliusAPIKey != "" {
 			listener := copytrade.NewWebSocketListener(m.config, wallets)
@@ -97,6 +110,20 @@ func (m *Manager) Start(agentType AgentType) error {
 				}
 				cb := m.OnTrade
 				m.mu.Unlock()
+
+				// TRIGGER FAST LANE!
+				if agent.executor != nil && trade.TxHash != "" {
+					// Parse signature
+					if sig, err := solana.SignatureFromBase58(trade.TxHash); err == nil {
+						// Execute in background to not block WS
+						go func() {
+							if err := agent.executor.ProcessSignal(sig); err != nil {
+								// Log error? For now silent or fmt
+								fmt.Printf("❌ Fast Lane Error: %v\n", err)
+							}
+						}()
+					}
+				}
 
 				// Notify external listeners (dashboard)
 				if cb != nil {
