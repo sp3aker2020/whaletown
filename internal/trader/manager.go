@@ -2,6 +2,7 @@
 package trader
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -36,6 +37,9 @@ type Manager struct {
 	agents     map[string]*runningAgent
 	config     *common.Config
 	researcher *researcher.Researcher
+
+	// Callback for real-time trades
+	OnTrade func(common.Trade)
 }
 
 type runningAgent struct {
@@ -43,6 +47,7 @@ type runningAgent struct {
 	stopCh      chan struct{}
 	tracker     *copytrade.SolanaTracker
 	polyTracker *copytrade.PolymarketTracker
+	wsListener  *copytrade.WebSocketListener
 }
 
 // NewManager creates a new trading agent manager.
@@ -80,6 +85,33 @@ func (m *Manager) Start(agentType AgentType) error {
 		agent.status.Wallets = len(wallets)
 		agent.tracker = copytrade.NewSolanaTracker(m.config, wallets)
 		agent.polyTracker = copytrade.NewPolymarketTracker(m.config, wallets)
+
+		// Initialize WebSocket Listener for real-time alerts
+		if m.config.SolanaWSURL != "" || m.config.HeliusAPIKey != "" {
+			listener := copytrade.NewWebSocketListener(m.config, wallets)
+			listener.OnTrade = func(trade common.Trade) {
+				// Update internal stats
+				m.mu.Lock()
+				if a, ok := m.agents["copytrade"]; ok {
+					a.status.Trades++
+				}
+				cb := m.OnTrade
+				m.mu.Unlock()
+
+				// Notify external listeners (dashboard)
+				if cb != nil {
+					cb(trade)
+				}
+			}
+			agent.wsListener = listener
+			// Start listener in background
+			go func() {
+				if err := listener.Start(context.Background()); err != nil {
+					fmt.Printf("⚠️ WebSocket error: %v\n", err)
+				}
+			}()
+		}
+
 		go m.runCopyTradeLoop(agent)
 
 	case AgentTypeResearcher:

@@ -3,6 +3,7 @@ package web
 import (
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/speaker20/whaletown/internal/agents/common"
@@ -15,6 +16,10 @@ import (
 type DemoConvoyFetcher struct {
 	solanaTracker *copytrade.SolanaTracker
 	startTime     time.Time
+
+	// Real-time trades from WebSocket
+	mu             sync.RWMutex
+	realtimeTrades []common.Trade
 }
 
 // NewDemoConvoyFetcher creates a demo fetcher with sample data.
@@ -23,8 +28,23 @@ func NewDemoConvoyFetcher() *DemoConvoyFetcher {
 	wallets := loadWalletsFromWatchlist()
 
 	return &DemoConvoyFetcher{
-		solanaTracker: copytrade.NewSolanaTracker(config, wallets),
-		startTime:     time.Now(),
+		solanaTracker:  copytrade.NewSolanaTracker(config, wallets),
+		startTime:      time.Now(),
+		realtimeTrades: make([]common.Trade, 0),
+	}
+}
+
+// AddTrade adds a real-time trade to the buffer.
+func (f *DemoConvoyFetcher) AddTrade(trade common.Trade) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	// Prepend new trade
+	f.realtimeTrades = append([]common.Trade{trade}, f.realtimeTrades...)
+
+	// Keep last 50
+	if len(f.realtimeTrades) > 50 {
+		f.realtimeTrades = f.realtimeTrades[:50]
 	}
 }
 
@@ -52,37 +72,58 @@ func (f *DemoConvoyFetcher) FetchPolecats() ([]PolecatRow, error) {
 	return []PolecatRow{}, nil
 }
 
-// FetchWhaleTrades fetches live whale trades from the Solana tracker.
+// FetchWhaleTrades fetches live whale trades from the Solana tracker + WebSocket.
 func (f *DemoConvoyFetcher) FetchWhaleTrades() ([]WhaleTradeRow, error) {
+	// Get real-time trades first
+	f.mu.RLock()
+	trades := make([]common.Trade, len(f.realtimeTrades))
+	copy(trades, f.realtimeTrades)
+	f.mu.RUnlock()
+
 	apiKey := os.Getenv("HELIUS_API_KEY")
-	if apiKey == "" {
-		// Return mock data if no API key
-		return f.mockWhaleTrades(), nil
+
+	// If we have API key, also try to fetch historical/recent from REST
+	if apiKey != "" {
+		if apiTrades, err := f.solanaTracker.FetchRecentTrades(); err == nil {
+			// Append API trades (ignoring duplicates ideally, but for now simple append)
+			trades = append(trades, apiTrades...)
+		}
 	}
 
-	// Fetch real trades
-	trades, err := f.solanaTracker.FetchRecentTrades()
-	if err != nil {
+	// Logic: If we have NO data (WS or API), fall back to mocks ONLY if no key
+	if len(trades) == 0 && apiKey == "" {
 		return f.mockWhaleTrades(), nil
 	}
 
 	// Convert to WhaleTradeRow format
 	rows := make([]WhaleTradeRow, 0, len(trades))
 	for _, t := range trades {
+		// Default type for WS alerts
+		txType := t.Type
+		if txType == "alert" {
+			txType = "Detected 🚨"
+		}
+
+		txURL := fmt.Sprintf("https://solscan.io/tx/%s", t.TxHash)
+		if t.TxHash == "" {
+			txURL = "#"
+		}
+
 		rows = append(rows, WhaleTradeRow{
 			Timestamp:   formatTimeAgo(t.Timestamp),
 			WalletAlias: t.WalletAlias,
-			Type:        t.Type,
+			Type:        txType,
 			TokenIn:     t.TokenIn,
 			TokenOut:    t.TokenOut,
 			AmountIn:    formatAmount(t.AmountIn),
 			AmountOut:   formatAmount(t.AmountOut),
 			TxHash:      shortenTx(t.TxHash),
-			TxURL:       fmt.Sprintf("https://solscan.io/tx/%s", t.TxHash),
+			TxURL:       txURL,
 			Platform:    t.Platform,
 		})
 	}
 
+	// Sort by time (newest first) implicitly or ensure it
 	return rows, nil
 }
 
@@ -182,6 +223,37 @@ func (f *DemoConvoyFetcher) FetchAgentStatuses() ([]AgentStatusRow, error) {
 			NextRun:     formatDuration(copytradeNext),
 			ItemCount:   tradeCount,
 			ItemLabel:   "trades",
+		},
+		// Upcoming Agents (Roadmap)
+		{
+			Name:        "sniper",
+			DisplayName: "🎯 Sniper Agent",
+			Status:      "coming soon",
+			StatusClass: "agent-soon",
+			LastRun:     "dev mode",
+			NextRun:     "TBA",
+			ItemCount:   0,
+			ItemLabel:   "memes",
+		},
+		{
+			Name:        "cda",
+			DisplayName: "⚖️ CDA Strategy",
+			Status:      "coming soon",
+			StatusClass: "agent-soon",
+			LastRun:     "planned",
+			NextRun:     "TBA",
+			ItemCount:   0,
+			ItemLabel:   "arbs",
+		},
+		{
+			Name:        "sentiment",
+			DisplayName: "🧠 Sentiment Analysis",
+			Status:      "coming soon",
+			StatusClass: "agent-soon",
+			LastRun:     "planned",
+			NextRun:     "TBA",
+			ItemCount:   0,
+			ItemLabel:   "signals",
 		},
 	}, nil
 }

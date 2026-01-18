@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/speaker20/whaletown/internal/agents/common"
 	"github.com/speaker20/whaletown/internal/trader"
 	"github.com/speaker20/whaletown/internal/web"
 	"github.com/spf13/cobra"
@@ -49,19 +50,23 @@ func init() {
 }
 
 func runDashboard(cmd *cobra.Command, args []string) error {
-	// Auto-start trading agents if requested or if HELIUS_API_KEY is set
-	if dashboardWithAgents || os.Getenv("HELIUS_API_KEY") != "" {
-		startTradingAgents()
-	}
-
 	// Try to create a live fetcher (may fail if not in workspace)
 	var fetcher web.ConvoyFetcher
+	var onTrade func(common.Trade)
+
 	liveFetcher, err := web.NewLiveConvoyFetcher()
 	if err != nil {
 		// Not in a workspace - use demo fetcher with sample whale data
-		fetcher = web.NewDemoConvoyFetcher()
+		demoFetcher := web.NewDemoConvoyFetcher()
+		fetcher = demoFetcher
+		onTrade = demoFetcher.AddTrade
 	} else {
 		fetcher = liveFetcher
+	}
+
+	// Auto-start trading agents if requested or if HELIUS_API_KEY is set
+	if dashboardWithAgents || os.Getenv("HELIUS_API_KEY") != "" {
+		startTradingAgents(onTrade)
 	}
 
 	// Create the handler
@@ -94,8 +99,11 @@ func runDashboard(cmd *cobra.Command, args []string) error {
 }
 
 // startTradingAgents starts the researcher and copytrade agents.
-func startTradingAgents() {
+func startTradingAgents(onTrade func(common.Trade)) {
 	mgr := trader.NewManager()
+
+	// Hook up callback
+	mgr.OnTrade = onTrade
 
 	// Start researcher (discovers wallets)
 	if err := mgr.Start(trader.AgentTypeResearcher); err != nil {
