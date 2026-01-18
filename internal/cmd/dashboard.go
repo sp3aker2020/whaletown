@@ -46,8 +46,8 @@ func runDashboard(cmd *cobra.Command, args []string) error {
 	var fetcher web.ConvoyFetcher
 	liveFetcher, err := web.NewLiveConvoyFetcher()
 	if err != nil {
-		// Not in a workspace - use empty fetcher (shows empty state on dashboard)
-		fetcher = web.NewEmptyConvoyFetcher()
+		// Not in a workspace - use demo fetcher with sample whale data
+		fetcher = web.NewDemoConvoyFetcher()
 	} else {
 		fetcher = liveFetcher
 	}
