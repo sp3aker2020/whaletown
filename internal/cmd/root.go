@@ -7,10 +7,10 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/speaker20/whaletown/internal/style"
 	"github.com/speaker20/whaletown/internal/version"
 	"github.com/speaker20/whaletown/internal/workspace"
+	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
@@ -30,6 +30,7 @@ var beadsExemptCommands = map[string]bool{
 	"version":    true,
 	"help":       true,
 	"completion": true,
+	"dashboard":  true, // Allows running on Render without beads
 }
 
 // Commands exempt from the town root branch warning.
