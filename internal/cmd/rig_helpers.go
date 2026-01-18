@@ -1,0 +1,36 @@
+package cmd
+
+import (
+	"fmt"
+
+	"github.com/speaker20/whaletown/internal/config"
+	"github.com/speaker20/whaletown/internal/constants"
+	"github.com/speaker20/whaletown/internal/git"
+	"github.com/speaker20/whaletown/internal/rig"
+	"github.com/speaker20/whaletown/internal/workspace"
+)
+
+// getRig finds the town root and retrieves the specified rig.
+// This is the common boilerplate extracted from get*Manager functions.
+// Returns the town root path and rig instance.
+func getRig(rigName string) (string, *rig.Rig, error) {
+	townRoot, err := workspace.FindFromCwdOrError()
+	if err != nil {
+		return "", nil, fmt.Errorf("not in a Whale Town workspace: %w", err)
+	}
+
+	rigsConfigPath := constants.MayorRigsPath(townRoot)
+	rigsConfig, err := config.LoadRigsConfig(rigsConfigPath)
+	if err != nil {
+		rigsConfig = &config.RigsConfig{Rigs: make(map[string]config.RigEntry)}
+	}
+
+	g := git.NewGit(townRoot)
+	rigMgr := rig.NewManager(townRoot, rigsConfig, g)
+	r, err := rigMgr.GetRig(rigName)
+	if err != nil {
+		return "", nil, fmt.Errorf("rig '%s' not found", rigName)
+	}
+
+	return townRoot, r, nil
+}

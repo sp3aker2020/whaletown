@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐋 Whale Town Dashboard</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        :root {
+            --bg-ocean: #0a192f;
+            --bg-deep: #172a45;
+            --bg-card: #1f3a5f;
+            --text-primary: #e6f1ff;
+            --text-secondary: #8892b0;
+            --border: #233554;
+            --whale-blue: #64ffda;
+            --bubble-cyan: #00d4ff;
+            --warning-coral: #ff6b6b;
+            --success-green: #4ade80;
+            --warning-yellow: #ffd93d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+            background: linear-gradient(180deg, var(--bg-ocean) 0%, #0d1f3c 100%);
+            color: var(--text-primary);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* Animated bubbles background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='10' cy='90' r='2' fill='%2364ffda' opacity='0.1'%3E%3Canimate attributeName='cy' values='90;-10' dur='8s' repeatCount='indefinite'/%3E%3C/circle%3E%3Ccircle cx='30' cy='95' r='1.5' fill='%2364ffda' opacity='0.15'%3E%3Canimate attributeName='cy' values='95;-10' dur='6s' repeatCount='indefinite'/%3E%3C/circle%3E%3Ccircle cx='50' cy='88' r='2.5' fill='%2364ffda' opacity='0.1'%3E%3Canimate attributeName='cy' values='88;-10' dur='10s' repeatCount='indefinite'/%3E%3C/circle%3E%3Ccircle cx='70' cy='92' r='1' fill='%2364ffda' opacity='0.2'%3E%3Canimate attributeName='cy' values='92;-10' dur='7s' repeatCount='indefinite'/%3E%3C/circle%3E%3Ccircle cx='90' cy='85' r='2' fill='%2364ffda' opacity='0.1'%3E%3Canimate attributeName='cy' values='85;-10' dur='9s' repeatCount='indefinite'/%3E%3C/circle%3E%3C/svg%3E") repeat;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--whale-blue);
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            background: linear-gradient(90deg, var(--whale-blue), var(--bubble-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h1 span {
+            -webkit-text-fill-color: white;
+        }
+
+        .subtitle {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .refresh-info {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .section-header {
+            margin-top: 32px;
+            margin-bottom: 16px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-header .emoji {
+            font-size: 1.5rem;
+        }
+
+        .convoy-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .convoy-table th,
+        .convoy-table td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .convoy-table th {
+            background: var(--bg-deep);
+            font-weight: 500;
+            color: var(--whale-blue);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .convoy-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .convoy-table tr:hover {
+            background: rgba(100, 255, 218, 0.05);
+        }
+
+        /* Status indicators */
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Work status badges */
+        .work-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .work-complete .work-status {
+            background: linear-gradient(90deg, var(--success-green), #22c55e);
+            color: var(--bg-ocean);
+        }
+
+        .work-active .work-status {
+            background: linear-gradient(90deg, var(--whale-blue), var(--bubble-cyan));
+            color: var(--bg-ocean);
+        }
+
+        .work-stale .work-status {
+            background: linear-gradient(90deg, var(--warning-yellow), #f59e0b);
+            color: var(--bg-ocean);
+        }
+
+        .work-stuck .work-status {
+            background: linear-gradient(90deg, var(--warning-coral), #dc2626);
+            color: white;
+        }
+
+        .work-waiting .work-status {
+            background: var(--text-secondary);
+            color: var(--bg-ocean);
+        }
+
+        /* Activity colors */
+        .activity-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .activity-green .activity-dot {
+            background: var(--success-green);
+            box-shadow: 0 0 12px var(--success-green);
+        }
+
+        .activity-yellow .activity-dot {
+            background: var(--warning-yellow);
+            box-shadow: 0 0 12px var(--warning-yellow);
+        }
+
+        .activity-red .activity-dot {
+            background: var(--warning-coral);
+            box-shadow: 0 0 12px var(--warning-coral);
+        }
+
+        .convoy-id {
+            font-weight: 600;
+            color: var(--whale-blue);
+        }
+
+        .convoy-title {
+            color: var(--text-secondary);
+            margin-left: 10px;
+        }
+
+        .progress {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .progress-bar {
+            width: 80px;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--whale-blue), var(--bubble-cyan));
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px dashed var(--border);
+        }
+
+        .empty-state h2 {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+            color: var(--whale-blue);
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+        }
+
+        .empty-state code {
+            background: var(--bg-deep);
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: var(--whale-blue);
+        }
+
+        .pod-member-icon {
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .footer .whale-art {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard" hx-get="/" hx-trigger="every 10s" hx-swap="outerHTML">
+        <header>
+            <div>
+                <h1>🐋 Whale Town Dashboard</h1>
+                <div class="subtitle">Multi-Agent Orchestration System • Deep Ocean Operations</div>
+            </div>
+            <span class="refresh-info">
+                🫧 Auto-refresh: every 10s
+                <span class="htmx-indicator">⟳</span>
+            </span>
+        </header>
+
+        <h2 class="section-header"><span class="emoji">🫧</span> Bubble Nets (Active Work Tracking)</h2>
+        {{if .Convoys}}
+        <table class="convoy-table">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Bubble Net</th>
+                    <th>Progress</th>
+                    <th>Last Ping</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Convoys}}
+                <tr class="{{workStatusClass .WorkStatus}}">
+                    <td>
+                        <span class="work-status">{{.WorkStatus}}</span>
+                    </td>
+                    <td>
+                        <span class="convoy-id">{{.ID}}</span>
+                        <span class="convoy-title">{{.Title}}</span>
+                    </td>
+                    <td class="progress">
+                        {{.Progress}}
+                        {{if .Total}}
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{progressPercent .Completed .Total}}%;"></div>
+                        </div>
+                        {{end}}
+                    </td>
+                    <td class="{{activityClass .LastActivity}}">
+                        <span class="activity-dot"></span>
+                        {{.LastActivity.FormattedAge}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        {{else}}
+        <div class="empty-state">
+            <h2>🌊 The ocean is calm...</h2>
+            <p>No bubble nets found. Create one with:</p>
+            <p><code>wt convoy create "Feature Name" issue1 issue2</code></p>
+        </div>
+        {{end}}
+
+        <h2 class="section-header"><span class="emoji">🌊</span> Current Chamber (Merge Queue)</h2>
+        {{if .MergeQueue}}
+        <table class="convoy-table">
+            <thead>
+                <tr>
+                    <th>PR #</th>
+                    <th>Ocean Lab</th>
+                    <th>Title</th>
+                    <th>CI Status</th>
+                    <th>Mergeable</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .MergeQueue}}
+                <tr class="{{.ColorClass}}">
+                    <td>
+                        <a href="{{.URL}}" target="_blank" class="pr-link">#{{.Number}}</a>
+                    </td>
+                    <td>{{.Repo}}</td>
+                    <td>
+                        <span class="pr-title">{{.Title}}</span>
+                    </td>
+                    <td>
+                        {{if eq .CIStatus "pass"}}
+                        <span class="ci-status ci-pass">✓ Pass</span>
+                        {{else if eq .CIStatus "fail"}}
+                        <span class="ci-status ci-fail">✗ Fail</span>
+                        {{else}}
+                        <span class="ci-status ci-pending">⏳ Pending</span>
+                        {{end}}
+                    </td>
+                    <td>
+                        {{if eq .Mergeable "ready"}}
+                        <span class="merge-status merge-ready">Ready</span>
+                        {{else if eq .Mergeable "conflict"}}
+                        <span class="merge-status merge-conflict">Conflict</span>
+                        {{else}}
+                        <span class="merge-status merge-pending">Pending</span>
+                        {{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        {{else}}
+        <div class="empty-state">
+            <p>🌊 No PRs in the current chamber</p>
+        </div>
+        {{end}}
+
+        {{if .Polecats}}
+        <h2 class="section-header"><span class="emoji">🐳</span> Pod Members (Active Workers)</h2>
+        <table class="convoy-table">
+            <thead>
+                <tr>
+                    <th>Pod Member</th>
+                    <th>Ocean Lab</th>
+                    <th>Last Surfaced</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Polecats}}
+                <tr>
+                    <td>
+                        <span class="pod-member-icon">🐳</span>
+                        <span class="convoy-id">{{.Name}}</span>
+                    </td>
+                    <td>{{.Rig}}</td>
+                    <td class="{{activityClass .LastActivity}}">
+                        <span class="activity-dot"></span>
+                        {{.LastActivity.FormattedAge}}
+                    </td>
+                    <td class="status-hint">{{.StatusHint}}</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        {{end}}
+
+        <div class="footer">
+            <div class="whale-art">🐋🫧🌊</div>
+            <p>Whale Town v0.4.0 • Every bubble carries meaning • Every dive has purpose</p>
+        </div>
+    </div>
+</body>
+</html>
