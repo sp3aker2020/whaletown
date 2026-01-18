@@ -277,24 +277,43 @@ wt config default-agent claude-glm
 wt config show
 ```
 
-## Dashboard
+## Dashboard & Village Visualization
 
-Whale Town includes a web dashboard for monitoring:
+Whale Town includes both a **data dashboard** and an **interactive whale village**!
+
+### Dashboard
+Real-time monitoring of your agents and work progress:
 
 ```bash
-# Start dashboard
 wt dashboard --port 8080
-
-# Open in browser
-open http://localhost:8080
+# Visit http://localhost:8080
 ```
 
-Features:
+![Whale Town Dashboard](docs/images/dashboard.png)
 
-- Real-time Pod Member status 🐳
-- Bubble Net progress tracking 🫧
-- Blowhole state visualization �️
-- Configuration management
+**Features:**
+- 🫧 Bubble Net progress tracking
+- 🌊 Current Chamber (merge queue)
+- 🐳 Pod Member status
+
+### 🐋 Whale Village (Interactive Visualization)
+
+A fun, animated underwater scene showing your agents as swimming whales:
+
+```bash
+wt dashboard --port 8080
+# Visit http://localhost:8080/village
+```
+
+![Whale Village](docs/images/village.png)
+
+**Features:**
+- 🐋 Animated whale agents swimming around
+- 🫧 Rising bubbles and swaying seaweed
+- 🪸 Colorful coral reef scenery
+- 📊 Sidebar with agent list and progress bars
+- ⏸️ Pause/Resume simulation controls
+- 💬 Pod chat log
 
 ## Advanced Concepts
 
