@@ -31,6 +31,7 @@ var beadsExemptCommands = map[string]bool{
 	"help":       true,
 	"completion": true,
 	"dashboard":  true, // Allows running on Render without beads
+	"trader":     true, // Trading agents can run standalone
 }
 
 // Commands exempt from the town root branch warning.
@@ -54,13 +55,23 @@ func persistentPreRun(cmd *cobra.Command, args []string) error {
 		warnIfTownRootOffMain()
 	}
 
-	// Skip beads check for exempt commands
-	if beadsExemptCommands[cmdName] {
+	// Skip beads check for exempt commands (including subcommands of exempt parents)
+	if beadsExemptCommands[cmdName] || isExemptParent(cmd) {
 		return nil
 	}
 
 	// Check beads version
 	return CheckBeadsVersion()
+}
+
+// isExemptParent checks if any parent command is exempt from beads checks.
+func isExemptParent(cmd *cobra.Command) bool {
+	for p := cmd.Parent(); p != nil; p = p.Parent() {
+		if beadsExemptCommands[p.Name()] {
+			return true
+		}
+	}
+	return false
 }
 
 // warnIfTownRootOffMain prints a warning if the town root is not on main branch.
