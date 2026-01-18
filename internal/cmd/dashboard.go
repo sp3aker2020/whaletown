@@ -7,9 +7,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/speaker20/whaletown/internal/web"
-	"github.com/speaker20/whaletown/internal/workspace"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -43,15 +42,14 @@ func init() {
 }
 
 func runDashboard(cmd *cobra.Command, args []string) error {
-	// Verify we're in a workspace
-	if _, err := workspace.FindFromCwdOrError(); err != nil {
-		return fmt.Errorf("not in a Whale Town workspace: %w", err)
-	}
-
-	// Create the live convoy fetcher
-	fetcher, err := web.NewLiveConvoyFetcher()
+	// Try to create a live fetcher (may fail if not in workspace)
+	var fetcher web.ConvoyFetcher
+	liveFetcher, err := web.NewLiveConvoyFetcher()
 	if err != nil {
-		return fmt.Errorf("creating convoy fetcher: %w", err)
+		// Not in a workspace - use empty fetcher (shows empty state on dashboard)
+		fetcher = web.NewEmptyConvoyFetcher()
+	} else {
+		fetcher = liveFetcher
 	}
 
 	// Create the handler
