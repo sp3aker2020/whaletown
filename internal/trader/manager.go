@@ -8,6 +8,7 @@ import (
 
 	"github.com/speaker20/whaletown/internal/agents/common"
 	"github.com/speaker20/whaletown/internal/agents/copytrade"
+	"github.com/speaker20/whaletown/internal/agents/researcher"
 )
 
 // AgentType represents a type of trading agent.
@@ -26,13 +27,15 @@ type AgentStatus struct {
 	StartedAt time.Time `json:"started_at,omitempty"`
 	Trades    int       `json:"trades,omitempty"`  // Number of trades tracked
 	Signals   int       `json:"signals,omitempty"` // Number of signals generated
+	Wallets   int       `json:"wallets,omitempty"` // Number of wallets tracked
 }
 
 // Manager manages trading agent lifecycles.
 type Manager struct {
-	mu     sync.RWMutex
-	agents map[string]*runningAgent
-	config *common.Config
+	mu         sync.RWMutex
+	agents     map[string]*runningAgent
+	config     *common.Config
+	researcher *researcher.Researcher
 }
 
 type runningAgent struct {
@@ -72,14 +75,24 @@ func (m *Manager) Start(agentType AgentType) error {
 
 	switch agentType {
 	case AgentTypeCopyTrade:
-		wallets := common.DefaultTrackedWallets()
+		// Load wallets from watchlist if available, else use defaults
+		wallets := m.loadWallets()
+		agent.status.Wallets = len(wallets)
 		agent.tracker = copytrade.NewSolanaTracker(m.config, wallets)
 		agent.polyTracker = copytrade.NewPolymarketTracker(m.config, wallets)
 		go m.runCopyTradeLoop(agent)
 
 	case AgentTypeResearcher:
-		// TODO: Implement researcher agent
-		go m.runResearcherLoop(agent)
+		m.researcher = researcher.NewResearcher(5 * time.Minute)
+		m.researcher.OnUpdate = func(wl *researcher.Watchlist) {
+			m.mu.Lock()
+			if a, ok := m.agents["researcher"]; ok {
+				a.status.Wallets = len(wl.Wallets)
+				a.status.Signals++
+			}
+			m.mu.Unlock()
+		}
+		go m.researcher.Start()
 
 	default:
 		return fmt.Errorf("unknown agent type: %s", agentType)
@@ -87,6 +100,18 @@ func (m *Manager) Start(agentType AgentType) error {
 
 	m.agents[name] = agent
 	return nil
+}
+
+// loadWallets loads wallets from watchlist or falls back to defaults.
+func (m *Manager) loadWallets() []common.TrackedWallet {
+	wl, err := researcher.LoadWatchlist()
+	if err == nil && wl != nil && len(wl.Wallets) > 0 {
+		fmt.Printf("📋 Loaded %d wallets from watchlist\n", len(wl.Wallets))
+		return wl.ToTrackedWallets()
+	}
+
+	// Fall back to defaults
+	return common.DefaultTrackedWallets()
 }
 
 // Stop stops a trading agent.
