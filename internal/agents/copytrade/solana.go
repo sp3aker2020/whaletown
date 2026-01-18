@@ -6,16 +6,25 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/speaker20/whaletown/internal/agents/common"
 )
+
+// CacheDuration is how long to cache API results to avoid rate limits.
+const CacheDuration = 60 * time.Second
 
 // SolanaTracker monitors Solana whale wallets for swap transactions.
 type SolanaTracker struct {
 	config  *common.Config
 	wallets []common.TrackedWallet
 	client  *http.Client
+
+	// Cache to avoid rate limits
+	cacheMu    sync.RWMutex
+	cachedData []common.Trade
+	cacheTime  time.Time
 }
 
 // NewSolanaTracker creates a new Solana wallet tracker.
@@ -67,10 +76,26 @@ type HeliusNativeTransfer struct {
 }
 
 // FetchRecentTrades fetches recent swap transactions for all tracked wallets.
+// Results are cached for 60 seconds to avoid rate limits.
 func (t *SolanaTracker) FetchRecentTrades() ([]common.Trade, error) {
+	// Check cache first
+	t.cacheMu.RLock()
+	if time.Since(t.cacheTime) < CacheDuration && len(t.cachedData) > 0 {
+		cached := t.cachedData
+		t.cacheMu.RUnlock()
+		return cached, nil
+	}
+	t.cacheMu.RUnlock()
+
+	// Fetch fresh data
 	allTrades := []common.Trade{}
 
-	for _, wallet := range t.wallets {
+	for i, wallet := range t.wallets {
+		// Add delay between requests to avoid rate limits
+		if i > 0 {
+			time.Sleep(500 * time.Millisecond)
+		}
+
 		trades, err := t.fetchWalletTrades(wallet)
 		if err != nil {
 			// Log but continue with other wallets
@@ -79,6 +104,12 @@ func (t *SolanaTracker) FetchRecentTrades() ([]common.Trade, error) {
 		}
 		allTrades = append(allTrades, trades...)
 	}
+
+	// Update cache
+	t.cacheMu.Lock()
+	t.cachedData = allTrades
+	t.cacheTime = time.Now()
+	t.cacheMu.Unlock()
 
 	return allTrades, nil
 }
