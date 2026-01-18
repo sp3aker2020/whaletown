@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐋 Whale Town Village</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Press Start 2P', 'Courier New', monospace;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Ocean Canvas */
+        .ocean {
+            flex: 1;
+            background: linear-gradient(180deg, 
+                #0a1628 0%, 
+                #0d2137 20%, 
+                #0f3460 40%, 
+                #16213e 60%, 
+                #1a1a2e 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated seaweed */
+        .seaweed {
+            position: absolute;
+            bottom: 0;
+            width: 20px;
+            background: linear-gradient(180deg, #2d5a27, #1a3a17);
+            border-radius: 10px 10px 0 0;
+            transform-origin: bottom center;
+            animation: sway 3s ease-in-out infinite;
+        }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        /* Ocean floor */
+        .ocean-floor {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(180deg, #3d2817, #2a1a0f);
+            border-top: 4px solid #4a3020;
+        }
+
+        .coral {
+            position: absolute;
+            bottom: 80px;
+            width: 40px;
+            height: 50px;
+            border-radius: 50% 50% 0 0;
+        }
+
+        /* Bubbles */
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, 
+                rgba(100, 255, 218, 0.4), 
+                rgba(100, 255, 218, 0.1));
+            border: 1px solid rgba(100, 255, 218, 0.3);
+            animation: rise linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(0) translateX(0); opacity: 0.8; }
+            50% { transform: translateY(-50vh) translateX(10px); opacity: 0.6; }
+            100% { transform: translateY(-100vh) translateX(-5px); opacity: 0; }
+        }
+
+        /* Whale Agent */
+        .whale {
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            z-index: 10;
+        }
+
+        .whale:hover {
+            transform: scale(1.1);
+        }
+
+        .whale-body {
+            position: relative;
+            background: #4a90a4;
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            box-shadow: 
+                inset -5px -5px 15px rgba(0,0,0,0.3),
+                inset 5px 5px 15px rgba(255,255,255,0.1);
+        }
+
+        .whale-eye {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            top: 30%;
+        }
+
+        .whale-eye::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #000;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+        }
+
+        .whale-fin {
+            position: absolute;
+            background: #3a7a8a;
+            border-radius: 0 50% 50% 0;
+        }
+
+        .whale-tail {
+            position: absolute;
+            width: 30px;
+            height: 20px;
+            background: #3a7a8a;
+            border-radius: 0 50% 50% 0;
+            animation: tailWag 1s ease-in-out infinite;
+        }
+
+        @keyframes tailWag {
+            0%, 100% { transform: rotate(-10deg); }
+            50% { transform: rotate(10deg); }
+        }
+
+        /* Agent name tag */
+        .whale-name {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: #64ffda;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            white-space: nowrap;
+            font-family: 'Courier New', monospace;
+        }
+
+        .whale-status {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 9px;
+            white-space: nowrap;
+            font-family: 'Courier New', monospace;
+            border: 1px solid #64ffda;
+        }
+
+        /* Status indicator */
+        .status-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin-right: 4px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .status-active { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+        .status-idle { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
+        .status-done { background: #60a5fa; box-shadow: 0 0 8px #60a5fa; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Captain whale - larger */
+        .whale.captain .whale-body {
+            background: #6366f1;
+            width: 120px;
+            height: 60px;
+        }
+
+        .whale.captain .whale-name {
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            color: #fff;
+        }
+
+        /* Side Panel */
+        .sidebar {
+            width: 300px;
+            background: linear-gradient(180deg, #0a192f, #172a45);
+            border-left: 2px solid #64ffda;
+            padding: 20px;
+            overflow-y: auto;
+            color: #e6f1ff;
+        }
+
+        .sidebar h2 {
+            color: #64ffda;
+            font-size: 14px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #233554;
+        }
+
+        .agent-list {
+            list-style: none;
+        }
+
+        .agent-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(35, 53, 84, 0.5);
+            border-radius: 8px;
+            border-left: 3px solid #64ffda;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .agent-item:hover {
+            background: rgba(35, 53, 84, 0.8);
+            transform: translateX(5px);
+        }
+
+        .agent-item.active {
+            border-left-color: #4ade80;
+            background: rgba(74, 222, 128, 0.1);
+        }
+
+        .agent-name {
+            font-weight: bold;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .agent-role {
+            color: #8892b0;
+            font-size: 10px;
+            margin-top: 4px;
+        }
+
+        .agent-task {
+            color: #64ffda;
+            font-size: 10px;
+            margin-top: 6px;
+        }
+
+        /* Progress section */
+        .progress-section {
+            margin-top: 20px;
+        }
+
+        .bubble-net {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(35, 53, 84, 0.5);
+            border-radius: 8px;
+        }
+
+        .bubble-net-title {
+            font-size: 11px;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #233554;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #64ffda, #4ade80);
+            transition: width 0.5s ease;
+        }
+
+        .progress-text {
+            font-size: 10px;
+            color: #8892b0;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        /* Simulation controls */
+        .controls {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #233554;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #233554;
+            border: 1px solid #64ffda;
+            color: #64ffda;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 11px;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #64ffda;
+            color: #0a192f;
+        }
+
+        .btn.pause {
+            background: #dc2626;
+            border-color: #dc2626;
+            color: #fff;
+        }
+
+        /* Conversation log */
+        .log-section {
+            margin-top: 20px;
+        }
+
+        .log-messages {
+            max-height: 150px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 8px;
+        }
+
+        .log-msg {
+            font-size: 9px;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(100, 255, 218, 0.1);
+            color: #8892b0;
+        }
+
+        .log-msg .time {
+            color: #64ffda;
+        }
+
+        .log-msg .agent {
+            color: #f472b6;
+        }
+
+        /* Light rays effect */
+        .light-ray {
+            position: absolute;
+            top: 0;
+            width: 100px;
+            height: 100%;
+            background: linear-gradient(180deg, 
+                rgba(100, 255, 218, 0.1) 0%, 
+                rgba(100, 255, 218, 0) 100%);
+            transform: skewX(-10deg);
+            pointer-events: none;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 10px;
+            color: #8892b0;
+        }
+
+        .footer span {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="ocean" id="ocean">
+            <!-- Light rays -->
+            <div class="light-ray" style="left: 10%;"></div>
+            <div class="light-ray" style="left: 40%;"></div>
+            <div class="light-ray" style="left: 70%;"></div>
+
+            <!-- Ocean floor -->
+            <div class="ocean-floor"></div>
+
+            <!-- Seaweed will be generated by JS -->
+            <!-- Coral will be generated by JS -->
+            <!-- Whales will be generated by JS -->
+            <!-- Bubbles will be generated by JS -->
+        </div>
+
+        <div class="sidebar">
+            <h2>🐳 POD MEMBERS</h2>
+            <ul class="agent-list" id="agentList">
+                <!-- Generated by JS -->
+            </ul>
+
+            <div class="progress-section">
+                <h2>🫧 BUBBLE NETS</h2>
+                <div id="bubbleNets">
+                    <!-- Generated by JS -->
+                </div>
+            </div>
+
+            <div class="controls">
+                <h2>⚙️ SIMULATION</h2>
+                <button class="btn" id="pauseBtn">⏸️ Pause</button>
+                <button class="btn" id="resetBtn">🔄 Reset Town</button>
+            </div>
+
+            <div class="log-section">
+                <h2>💬 POD CHAT</h2>
+                <div class="log-messages" id="logMessages">
+                    <!-- Generated by JS -->
+                </div>
+            </div>
+
+            <div class="footer">
+                <span>🐋🫧🌊</span>
+                <p>Whale Town v0.4.0</p>
+                <p>Every bubble carries meaning</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Whale Town Village Simulation
+
+        const agents = [
+            { id: 'captain', name: 'Captain Orca', role: 'Captain 🐋', task: 'Coordinating the pod', status: 'active', x: 300, y: 200, size: 100, isCapt: true },
+            { id: 'nemo', name: 'Nemo', role: 'frontend-lab', task: 'Building components', status: 'active', x: 150, y: 300, size: 60 },
+            { id: 'moby', name: 'Moby', role: 'auth-lab', task: 'OAuth flow', status: 'active', x: 450, y: 350, size: 55 },
+            { id: 'orca', name: 'Orca Jr', role: 'backend-lab', task: 'Running tests', status: 'idle', x: 250, y: 450, size: 50 },
+            { id: 'pearl', name: 'Pearl', role: 'docs-lab', task: 'Update docs', status: 'done', x: 500, y: 250, size: 45 },
+            { id: 'fin', name: 'Fin', role: 'backend-lab', task: 'Security audit', status: 'active', x: 100, y: 180, size: 50 },
+        ];
+
+        const bubbleNets = [
+            { title: '🐋 Great Migration', progress: 60 },
+            { title: '🫧 Auth System', progress: 33 },
+            { title: '🌊 Performance', progress: 0 },
+        ];
+
+        const messages = [
+            { time: '04:15', agent: 'Nemo', msg: 'Components ready!' },
+            { time: '04:12', agent: 'Captain', msg: 'Great work, pod!' },
+            { time: '04:10', agent: 'Moby', msg: 'OAuth tokens working' },
+            { time: '04:08', agent: 'Pearl', msg: 'Docs updated ✓' },
+        ];
+
+        const ocean = document.getElementById('ocean');
+        let isPaused = false;
+        let animationFrame;
+
+        // Initialize the scene
+        function init() {
+            createSeaweed();
+            createCoral();
+            createWhales();
+            createAgentList();
+            createBubbleNets();
+            createLogMessages();
+            startBubbles();
+            animate();
+        }
+
+        function createSeaweed() {
+            for (let i = 0; i < 15; i++) {
+                const seaweed = document.createElement('div');
+                seaweed.className = 'seaweed';
+                seaweed.style.left = (10 + Math.random() * 80) + '%';
+                seaweed.style.height = (80 + Math.random() * 100) + 'px';
+                seaweed.style.animationDelay = (Math.random() * 2) + 's';
+                ocean.appendChild(seaweed);
+            }
+        }
+
+        function createCoral() {
+            const colors = ['#ff6b6b', '#ff8787', '#f06595', '#cc5de8', '#845ef7'];
+            for (let i = 0; i < 8; i++) {
+                const coral = document.createElement('div');
+                coral.className = 'coral';
+                coral.style.left = (5 + Math.random() * 80) + '%';
+                coral.style.background = colors[Math.floor(Math.random() * colors.length)];
+                coral.style.width = (30 + Math.random() * 40) + 'px';
+                coral.style.height = (40 + Math.random() * 60) + 'px';
+                ocean.appendChild(coral);
+            }
+        }
+
+        function createWhales() {
+            agents.forEach(agent => {
+                const whale = document.createElement('div');
+                whale.className = 'whale' + (agent.isCapt ? ' captain' : '');
+                whale.id = 'whale-' + agent.id;
+                whale.style.left = agent.x + 'px';
+                whale.style.top = agent.y + 'px';
+                
+                const statusClass = agent.status === 'active' ? 'status-active' : 
+                                   agent.status === 'idle' ? 'status-idle' : 'status-done';
+
+                whale.innerHTML = `
+                    <div class="whale-status">
+                        <span class="status-dot ${statusClass}"></span>
+                        ${agent.task}
+                    </div>
+                    <div class="whale-body" style="width: ${agent.size}px; height: ${agent.size * 0.5}px;">
+                        <div class="whale-eye" style="left: ${agent.size * 0.7}px; top: ${agent.size * 0.15}px;"></div>
+                        <div class="whale-fin" style="left: ${agent.size * 0.3}px; top: -10px; width: 20px; height: 25px;"></div>
+                        <div class="whale-tail" style="left: -25px; top: ${agent.size * 0.15}px;"></div>
+                    </div>
+                    <div class="whale-name">${agent.name}</div>
+                `;
+
+                whale.addEventListener('click', () => showAgentDetails(agent));
+                ocean.appendChild(whale);
+
+                // Store animation properties
+                agent.targetX = agent.x;
+                agent.targetY = agent.y;
+                agent.moveTimer = 0;
+            });
+        }
+
+        function createAgentList() {
+            const list = document.getElementById('agentList');
+            list.innerHTML = agents.map(agent => `
+                <li class="agent-item ${agent.status === 'active' ? 'active' : ''}" onclick="focusWhale('${agent.id}')">
+                    <div class="agent-name">
+                        <span class="status-dot status-${agent.status}"></span>
+                        ${agent.name}
+                    </div>
+                    <div class="agent-role">${agent.role}</div>
+                    <div class="agent-task">${agent.task}</div>
+                </li>
+            `).join('');
+        }
+
+        function createBubbleNets() {
+            const container = document.getElementById('bubbleNets');
+            container.innerHTML = bubbleNets.map(net => `
+                <div class="bubble-net">
+                    <div class="bubble-net-title">${net.title}</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${net.progress}%"></div>
+                    </div>
+                    <div class="progress-text">${net.progress}%</div>
+                </div>
+            `).join('');
+        }
+
+        function createLogMessages() {
+            const container = document.getElementById('logMessages');
+            container.innerHTML = messages.map(m => `
+                <div class="log-msg">
+                    <span class="time">[${m.time}]</span>
+                    <span class="agent">${m.agent}:</span>
+                    ${m.msg}
+                </div>
+            `).join('');
+        }
+
+        function startBubbles() {
+            setInterval(() => {
+                if (isPaused) return;
+                createBubble();
+            }, 500);
+        }
+
+        function createBubble() {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            const size = 5 + Math.random() * 15;
+            bubble.style.width = size + 'px';
+            bubble.style.height = size + 'px';
+            bubble.style.left = (Math.random() * 80 + 10) + '%';
+            bubble.style.bottom = '80px';
+            bubble.style.animationDuration = (5 + Math.random() * 5) + 's';
+            ocean.appendChild(bubble);
+
+            setTimeout(() => bubble.remove(), 10000);
+        }
+
+        function animate() {
+            if (!isPaused) {
+                agents.forEach(agent => {
+                    agent.moveTimer++;
+                    
+                    // Set new target every ~200 frames
+                    if (agent.moveTimer > 150 + Math.random() * 100) {
+                        agent.moveTimer = 0;
+                        agent.targetX = 50 + Math.random() * (ocean.clientWidth - 200);
+                        agent.targetY = 100 + Math.random() * (ocean.clientHeight - 250);
+                    }
+
+                    // Move towards target
+                    const whale = document.getElementById('whale-' + agent.id);
+                    if (whale) {
+                        const dx = (agent.targetX - agent.x) * 0.01;
+                        const dy = (agent.targetY - agent.y) * 0.01;
+                        agent.x += dx;
+                        agent.y += dy;
+                        whale.style.left = agent.x + 'px';
+                        whale.style.top = agent.y + 'px';
+                        
+                        // Flip whale based on direction
+                        if (dx < -0.1) {
+                            whale.style.transform = 'scaleX(-1)';
+                        } else if (dx > 0.1) {
+                            whale.style.transform = 'scaleX(1)';
+                        }
+                    }
+                });
+
+                // Slowly increase progress
+                if (Math.random() > 0.99) {
+                    const net = bubbleNets[Math.floor(Math.random() * bubbleNets.length)];
+                    if (net.progress < 100) {
+                        net.progress = Math.min(100, net.progress + 1);
+                        createBubbleNets();
+                    }
+                }
+            }
+
+            animationFrame = requestAnimationFrame(animate);
+        }
+
+        function showAgentDetails(agent) {
+            alert(`🐳 ${agent.name}\n\nRole: ${agent.role}\nTask: ${agent.task}\nStatus: ${agent.status}`);
+        }
+
+        function focusWhale(id) {
+            const whale = document.getElementById('whale-' + id);
+            if (whale) {
+                whale.style.transform = 'scale(1.3)';
+                setTimeout(() => whale.style.transform = '', 500);
+            }
+        }
+
+        // Control buttons
+        document.getElementById('pauseBtn').addEventListener('click', function() {
+            isPaused = !isPaused;
+            this.textContent = isPaused ? '▶️ Resume' : '⏸️ Pause';
+            this.classList.toggle('pause', !isPaused);
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            agents.forEach((agent, i) => {
+                agent.x = 100 + i * 80;
+                agent.y = 200 + (i % 3) * 100;
+                agent.targetX = agent.x;
+                agent.targetY = agent.y;
+            });
+            bubbleNets.forEach(net => net.progress = Math.floor(Math.random() * 50));
+            createBubbleNets();
+        });
+
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

@@ -31,8 +31,18 @@ func NewConvoyHandler(fetcher ConvoyFetcher) (*ConvoyHandler, error) {
 	}, nil
 }
 
-// ServeHTTP handles GET / requests and renders the convoy dashboard.
+// ServeHTTP handles HTTP requests and routes to appropriate handlers.
 func (h *ConvoyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	switch r.URL.Path {
+	case "/village":
+		h.serveVillage(w, r)
+	default:
+		h.serveDashboard(w, r)
+	}
+}
+
+// serveDashboard renders the convoy dashboard.
+func (h *ConvoyHandler) serveDashboard(w http.ResponseWriter, r *http.Request) {
 	convoys, err := h.fetcher.FetchConvoys()
 	if err != nil {
 		http.Error(w, "Failed to fetch convoys", http.StatusInternalServerError)
@@ -61,6 +71,16 @@ func (h *ConvoyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.template.ExecuteTemplate(w, "convoy.html", data); err != nil {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+		return
+	}
+}
+
+// serveVillage renders the whale village visualization.
+func (h *ConvoyHandler) serveVillage(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	if err := h.template.ExecuteTemplate(w, "village.html", nil); err != nil {
+		http.Error(w, "Failed to render village template", http.StatusInternalServerError)
 		return
 	}
 }
