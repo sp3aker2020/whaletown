@@ -5,6 +5,7 @@ import (
 	"embed"
 	"html/template"
 	"io/fs"
+	"strings"
 
 	"github.com/speaker20/whaletown/internal/activity"
 )
@@ -14,10 +15,39 @@ var templateFS embed.FS
 
 // ConvoyData represents data passed to the convoy template.
 type ConvoyData struct {
-	Convoys     []ConvoyRow
-	MergeQueue  []MergeQueueRow
-	Polecats    []PolecatRow
-	WhaleTrades []WhaleTradeRow // Live whale trade data
+	// Real agent data
+	AgentStatuses  []AgentStatusRow   // Status of trading agents
+	TrackedWallets []TrackedWalletRow // Wallets from researcher
+	WhaleTrades    []WhaleTradeRow    // Live whale trade data
+
+	// Legacy (can be removed when not in workspace)
+	Convoys    []ConvoyRow
+	MergeQueue []MergeQueueRow
+	Polecats   []PolecatRow
+}
+
+// AgentStatusRow represents a trading agent's status.
+type AgentStatusRow struct {
+	Name        string // "researcher" or "copytrade"
+	DisplayName string // "🔬 Researcher" or "📈 Copy Trade"
+	Status      string // "running", "stopped"
+	StatusClass string // "agent-running", "agent-stopped"
+	LastRun     string // "2m ago"
+	NextRun     string // "in 3m"
+	ItemCount   int    // Wallets discovered or trades tracked
+	ItemLabel   string // "wallets" or "trades"
+}
+
+// TrackedWalletRow represents a wallet from the researcher.
+type TrackedWalletRow struct {
+	Address    string
+	Alias      string
+	Score      int
+	ScoreClass string // "score-high", "score-medium", "score-low"
+	Profit7d   string // Formatted profit
+	WinRate    string // "52%"
+	Trades     int
+	Platform   string
 }
 
 // WhaleTradeRow represents a whale's trade in the dashboard.
@@ -83,6 +113,7 @@ func LoadTemplates() (*template.Template, error) {
 		"statusClass":     statusClass,
 		"workStatusClass": workStatusClass,
 		"progressPercent": progressPercent,
+		"title":           strings.Title, //nolint:staticcheck // Simple title case is fine here
 	}
 
 	// Get the templates subdirectory

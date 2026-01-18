@@ -338,6 +338,109 @@
         .tx-link:hover {
             text-decoration: underline;
         }
+
+        /* Agent Status Cards */
+        .agent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .agent-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .agent-card.agent-running {
+            border-color: var(--success-green);
+            box-shadow: 0 0 8px rgba(74, 222, 128, 0.2);
+        }
+
+        .agent-card.agent-stopped {
+            border-color: var(--warning-coral);
+            opacity: 0.7;
+        }
+
+        .agent-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--whale-blue);
+        }
+
+        .agent-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success-green);
+            animation: pulse 2s infinite;
+        }
+
+        .agent-stopped .status-dot {
+            background: var(--warning-coral);
+            animation: none;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .agent-stats {
+            display: flex;
+            gap: 24px;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Score classes */
+        .score-high {
+            background: var(--success-green) !important;
+            color: var(--bg-ocean) !important;
+        }
+
+        .score-medium {
+            background: var(--warning-yellow) !important;
+            color: var(--bg-ocean) !important;
+        }
+
+        .score-low {
+            background: var(--warning-coral) !important;
+            color: var(--bg-ocean) !important;
+        }
     </style>
 </head>
 
@@ -357,8 +460,63 @@
             </div>
         </header>
 
-        <h2 class="section-header"><span class="emoji">🫧</span> Bubble Nets (Active Work Tracking)</h2>
+        <!-- Agent Status Section -->
+        {{if .AgentStatuses}}
+        <h2 class="section-header"><span class="emoji">🤖</span> Agent Status</h2>
+        <div class="agent-grid">
+            {{range .AgentStatuses}}
+            <div class="agent-card {{.StatusClass}}">
+                <div class="agent-name">{{.DisplayName}}</div>
+                <div class="agent-status">
+                    <span class="status-dot"></span>
+                    {{.Status}}
+                </div>
+                <div class="agent-stats">
+                    <div class="stat">
+                        <span class="stat-label">Next Run</span>
+                        <span class="stat-value">{{.NextRun}}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">{{.ItemLabel | title}}</span>
+                        <span class="stat-value">{{.ItemCount}}</span>
+                    </div>
+                </div>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+
+        <!-- Tracked Wallets Section -->
+        {{if .TrackedWallets}}
+        <h2 class="section-header"><span class="emoji">📋</span> Tracked Wallets (from Researcher)</h2>
+        <table class="convoy-table">
+            <thead>
+                <tr>
+                    <th>Alias</th>
+                    <th>Score</th>
+                    <th>7d Profit</th>
+                    <th>Win Rate</th>
+                    <th>Trades</th>
+                    <th>Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .TrackedWallets}}
+                <tr>
+                    <td><span class="convoy-id">{{.Alias}}</span></td>
+                    <td><span class="work-status {{.ScoreClass}}">{{.Score}}</span></td>
+                    <td>{{.Profit7d}}</td>
+                    <td>{{.WinRate}}</td>
+                    <td>{{.Trades}}</td>
+                    <td class="tx-link">{{.Address}}</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        {{end}}
+
         {{if .Convoys}}
+        <h2 class="section-header"><span class="emoji">🫧</span> Bubble Nets (Active Work Tracking)</h2>
         <table class="convoy-table">
             <thead>
                 <tr>

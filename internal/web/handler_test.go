@@ -40,6 +40,14 @@ func (m *MockConvoyFetcher) FetchWhaleTrades() ([]WhaleTradeRow, error) {
 	return m.WhaleTrades, nil
 }
 
+func (m *MockConvoyFetcher) FetchAgentStatuses() ([]AgentStatusRow, error) {
+	return []AgentStatusRow{}, nil
+}
+
+func (m *MockConvoyFetcher) FetchTrackedWallets() ([]TrackedWalletRow, error) {
+	return []TrackedWalletRow{}, nil
+}
+
 func TestConvoyHandler_RendersTemplate(t *testing.T) {
 	mock := &MockConvoyFetcher{
 		Convoys: []ConvoyRow{
@@ -971,6 +979,14 @@ func (m *MockConvoyFetcherWithErrors) FetchPolecats() ([]PolecatRow, error) {
 
 func (m *MockConvoyFetcherWithErrors) FetchWhaleTrades() ([]WhaleTradeRow, error) {
 	return nil, nil
+}
+
+func (m *MockConvoyFetcherWithErrors) FetchAgentStatuses() ([]AgentStatusRow, error) {
+	return []AgentStatusRow{}, nil
+}
+
+func (m *MockConvoyFetcherWithErrors) FetchTrackedWallets() ([]TrackedWalletRow, error) {
+	return []TrackedWalletRow{}, nil
 }
 
 func TestConvoyHandler_NonFatalErrors(t *testing.T) {

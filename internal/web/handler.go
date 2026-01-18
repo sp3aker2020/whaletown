@@ -11,6 +11,8 @@ type ConvoyFetcher interface {
 	FetchMergeQueue() ([]MergeQueueRow, error)
 	FetchPolecats() ([]PolecatRow, error)
 	FetchWhaleTrades() ([]WhaleTradeRow, error)
+	FetchAgentStatuses() ([]AgentStatusRow, error)
+	FetchTrackedWallets() ([]TrackedWalletRow, error)
 }
 
 // ConvoyHandler handles HTTP requests for the convoy dashboard.
@@ -44,35 +46,27 @@ func (h *ConvoyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // serveDashboard renders the convoy dashboard.
 func (h *ConvoyHandler) serveDashboard(w http.ResponseWriter, r *http.Request) {
-	convoys, err := h.fetcher.FetchConvoys()
-	if err != nil {
-		http.Error(w, "Failed to fetch convoys", http.StatusInternalServerError)
-		return
-	}
+	// Fetch agent statuses (primary data)
+	agentStatuses, _ := h.fetcher.FetchAgentStatuses()
 
-	mergeQueue, err := h.fetcher.FetchMergeQueue()
-	if err != nil {
-		// Non-fatal: show convoys even if merge queue fails
-		mergeQueue = nil
-	}
+	// Fetch tracked wallets
+	trackedWallets, _ := h.fetcher.FetchTrackedWallets()
 
-	polecats, err := h.fetcher.FetchPolecats()
-	if err != nil {
-		// Non-fatal: show convoys even if polecats fail
-		polecats = nil
-	}
+	// Fetch whale trades
+	whaleTrades, _ := h.fetcher.FetchWhaleTrades()
 
-	whaleTrades, err := h.fetcher.FetchWhaleTrades()
-	if err != nil {
-		// Non-fatal: show other data even if whale trades fail
-		whaleTrades = nil
-	}
+	// Legacy data (empty for agent-focused dashboard)
+	convoys, _ := h.fetcher.FetchConvoys()
+	mergeQueue, _ := h.fetcher.FetchMergeQueue()
+	polecats, _ := h.fetcher.FetchPolecats()
 
 	data := ConvoyData{
-		Convoys:     convoys,
-		MergeQueue:  mergeQueue,
-		Polecats:    polecats,
-		WhaleTrades: whaleTrades,
+		AgentStatuses:  agentStatuses,
+		TrackedWallets: trackedWallets,
+		WhaleTrades:    whaleTrades,
+		Convoys:        convoys,
+		MergeQueue:     mergeQueue,
+		Polecats:       polecats,
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

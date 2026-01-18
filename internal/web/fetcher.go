@@ -758,3 +758,15 @@ func parseActivityTimestamp(s string) (int64, bool) {
 func (f *LiveConvoyFetcher) FetchWhaleTrades() ([]WhaleTradeRow, error) {
 	return []WhaleTradeRow{}, nil
 }
+
+// FetchAgentStatuses returns empty slice for live fetcher.
+// Agent status is provided by DemoConvoyFetcher.
+func (f *LiveConvoyFetcher) FetchAgentStatuses() ([]AgentStatusRow, error) {
+	return []AgentStatusRow{}, nil
+}
+
+// FetchTrackedWallets returns empty slice for live fetcher.
+// Tracked wallets are provided by DemoConvoyFetcher.
+func (f *LiveConvoyFetcher) FetchTrackedWallets() ([]TrackedWalletRow, error) {
+	return []TrackedWalletRow{}, nil
+}
