@@ -7,7 +7,18 @@ import (
 
 // Config holds API keys and configuration for agents.
 type Config struct {
-	HeliusAPIKey      string
+	// Helius API for parsed transactions (fallback)
+	HeliusAPIKey string
+
+	// Custom Solana RPC (for higher rate limits)
+	// If set, uses this for RPC calls instead of public endpoints
+	SolanaRPCURL string
+
+	// Solana WebSocket URL for real-time subscriptions
+	// Example: wss://api.mainnet-beta.solana.com
+	SolanaWSURL string
+
+	// Prediction market APIs
 	PolymarketBaseURL string
 	KalshiAPIKey      string
 	KalshiAPISecret   string
@@ -17,10 +28,22 @@ type Config struct {
 func DefaultConfig() *Config {
 	return &Config{
 		HeliusAPIKey:      os.Getenv("HELIUS_API_KEY"),
+		SolanaRPCURL:      os.Getenv("SOLANA_RPC_URL"),
+		SolanaWSURL:       os.Getenv("SOLANA_WS_URL"),
 		PolymarketBaseURL: "https://gamma-api.polymarket.com",
 		KalshiAPIKey:      os.Getenv("KALSHI_API_KEY"),
 		KalshiAPISecret:   os.Getenv("KALSHI_API_SECRET"),
 	}
+}
+
+// HasCustomRPC returns true if a custom RPC URL is configured.
+func (c *Config) HasCustomRPC() bool {
+	return c.SolanaRPCURL != ""
+}
+
+// HasWebSocket returns true if WebSocket URL is configured.
+func (c *Config) HasWebSocket() bool {
+	return c.SolanaWSURL != ""
 }
 
 // DefaultTrackedWallets returns a list of known whale wallets to track.
