@@ -305,7 +305,7 @@ wt dashboard --port 8080
 # Visit http://localhost:8080/village
 ```
 
-![Whale Village](docs/images/village.png)
+![Whale Village](docs/images/village_trading.png)
 
 **Features:**
 - 🐋 Animated whale agents swimming around
