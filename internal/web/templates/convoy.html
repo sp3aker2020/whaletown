@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -145,8 +146,15 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
 
         /* Work status badges */
@@ -284,8 +292,29 @@
             font-size: 2rem;
             margin-bottom: 10px;
         }
+
+        .village-link {
+            display: inline-block;
+            background: var(--bg-card);
+            color: var(--whale-blue);
+            padding: 6px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid var(--whale-blue);
+            margin-right: 20px;
+            transition: all 0.2s;
+        }
+
+        .village-link:hover {
+            background: var(--whale-blue);
+            color: var(--bg-ocean);
+            box-shadow: 0 0 10px rgba(100, 255, 218, 0.3);
+        }
     </style>
 </head>
+
 <body>
     <div class="dashboard" hx-get="/" hx-trigger="every 10s" hx-swap="outerHTML">
         <header>
@@ -293,10 +322,13 @@
                 <h1>🐋 Whale Town Dashboard</h1>
                 <div class="subtitle">Multi-Agent Orchestration System • Deep Ocean Operations</div>
             </div>
-            <span class="refresh-info">
-                🫧 Auto-refresh: every 10s
-                <span class="htmx-indicator">⟳</span>
-            </span>
+            <div style="display: flex; align-items: center;">
+                <a href="/village" class="village-link">🐋 Visit Whale Village</a>
+                <span class="refresh-info">
+                    🫧 Auto-refresh: every 10s
+                    <span class="htmx-indicator">⟳</span>
+                </span>
+            </div>
         </header>
 
         <h2 class="section-header"><span class="emoji">🫧</span> Bubble Nets (Active Work Tracking)</h2>
@@ -430,4 +462,5 @@
         </div>
     </div>
 </body>
+
 </html>

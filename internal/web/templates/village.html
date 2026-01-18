@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,12 +26,12 @@
         /* Ocean Canvas */
         .ocean {
             flex: 1;
-            background: linear-gradient(180deg, 
-                #0a1628 0%, 
-                #0d2137 20%, 
-                #0f3460 40%, 
-                #16213e 60%, 
-                #1a1a2e 100%);
+            background: linear-gradient(180deg,
+                    #0a1628 0%,
+                    #0d2137 20%,
+                    #0f3460 40%,
+                    #16213e 60%,
+                    #1a1a2e 100%);
             position: relative;
             overflow: hidden;
         }
@@ -47,8 +48,15 @@
         }
 
         @keyframes sway {
-            0%, 100% { transform: rotate(-5deg); }
-            50% { transform: rotate(5deg); }
+
+            0%,
+            100% {
+                transform: rotate(-5deg);
+            }
+
+            50% {
+                transform: rotate(5deg);
+            }
         }
 
         /* Ocean floor */
@@ -74,18 +82,29 @@
         .bubble {
             position: absolute;
             border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, 
-                rgba(100, 255, 218, 0.4), 
-                rgba(100, 255, 218, 0.1));
+            background: radial-gradient(circle at 30% 30%,
+                    rgba(100, 255, 218, 0.4),
+                    rgba(100, 255, 218, 0.1));
             border: 1px solid rgba(100, 255, 218, 0.3);
             animation: rise linear infinite;
             pointer-events: none;
         }
 
         @keyframes rise {
-            0% { transform: translateY(0) translateX(0); opacity: 0.8; }
-            50% { transform: translateY(-50vh) translateX(10px); opacity: 0.6; }
-            100% { transform: translateY(-100vh) translateX(-5px); opacity: 0; }
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: translateY(-50vh) translateX(10px);
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: translateY(-100vh) translateX(-5px);
+                opacity: 0;
+            }
         }
 
         /* Whale Agent */
@@ -104,9 +123,9 @@
             position: relative;
             background: #4a90a4;
             border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-            box-shadow: 
-                inset -5px -5px 15px rgba(0,0,0,0.3),
-                inset 5px 5px 15px rgba(255,255,255,0.1);
+            box-shadow:
+                inset -5px -5px 15px rgba(0, 0, 0, 0.3),
+                inset 5px 5px 15px rgba(255, 255, 255, 0.1);
         }
 
         .whale-eye {
@@ -145,8 +164,15 @@
         }
 
         @keyframes tailWag {
-            0%, 100% { transform: rotate(-10deg); }
-            50% { transform: rotate(10deg); }
+
+            0%,
+            100% {
+                transform: rotate(-10deg);
+            }
+
+            50% {
+                transform: rotate(10deg);
+            }
         }
 
         /* Agent name tag */
@@ -189,13 +215,31 @@
             animation: pulse 1.5s ease-in-out infinite;
         }
 
-        .status-active { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
-        .status-idle { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
-        .status-done { background: #60a5fa; box-shadow: 0 0 8px #60a5fa; }
+        .status-active {
+            background: #4ade80;
+            box-shadow: 0 0 8px #4ade80;
+        }
+
+        .status-idle {
+            background: #fbbf24;
+            box-shadow: 0 0 8px #fbbf24;
+        }
+
+        .status-done {
+            background: #60a5fa;
+            box-shadow: 0 0 8px #60a5fa;
+        }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
 
         /* Captain whale - larger */
@@ -374,9 +418,9 @@
             top: 0;
             width: 100px;
             height: 100%;
-            background: linear-gradient(180deg, 
-                rgba(100, 255, 218, 0.1) 0%, 
-                rgba(100, 255, 218, 0) 100%);
+            background: linear-gradient(180deg,
+                    rgba(100, 255, 218, 0.1) 0%,
+                    rgba(100, 255, 218, 0) 100%);
             transform: skewX(-10deg);
             pointer-events: none;
         }
@@ -393,6 +437,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="ocean" id="ocean">
@@ -448,25 +493,25 @@
         // Whale Town Village Simulation
 
         const agents = [
-            { id: 'captain', name: 'Captain Orca', role: 'Captain 🐋', task: 'Coordinating the pod', status: 'active', x: 300, y: 200, size: 100, isCapt: true },
-            { id: 'nemo', name: 'Nemo', role: 'frontend-lab', task: 'Building components', status: 'active', x: 150, y: 300, size: 60 },
-            { id: 'moby', name: 'Moby', role: 'auth-lab', task: 'OAuth flow', status: 'active', x: 450, y: 350, size: 55 },
-            { id: 'orca', name: 'Orca Jr', role: 'backend-lab', task: 'Running tests', status: 'idle', x: 250, y: 450, size: 50 },
-            { id: 'pearl', name: 'Pearl', role: 'docs-lab', task: 'Update docs', status: 'done', x: 500, y: 250, size: 45 },
-            { id: 'fin', name: 'Fin', role: 'backend-lab', task: 'Security audit', status: 'active', x: 100, y: 180, size: 50 },
+            { id: 'captain', name: 'Satoshi (Capt)', role: 'Strategy Lead 🐋', task: 'Orchestrating trades', status: 'active', x: 300, y: 200, size: 100, isCapt: true },
+            { id: 'alpha', name: 'Alpha', role: 'market-maker', task: 'Scanning ETH/USDC', status: 'active', x: 150, y: 300, size: 60 },
+            { id: 'beta', name: 'Beta', role: 'market-maker', task: 'Calc spread', status: 'active', x: 450, y: 350, size: 55 },
+            { id: 'gamma', name: 'Gamma', role: 'market-maker', task: 'Flash loan exec', status: 'idle', x: 250, y: 450, size: 50 },
+            { id: 'doge', name: 'Doge', role: 'sniper-lab', task: 'Watching mempool', status: 'done', x: 500, y: 250, size: 45 },
+            { id: 'whale', name: 'Whale', role: 'portfolio', task: 'Rebalancing', status: 'active', x: 100, y: 180, size: 50 },
         ];
 
         const bubbleNets = [
-            { title: '🐋 Great Migration', progress: 60 },
-            { title: '🫧 Auth System', progress: 33 },
-            { title: '🌊 Performance', progress: 0 },
+            { title: '🐋 Arbitrage Bot', progress: 75 },
+            { title: '🫧 Meme Sniper', progress: 20 },
+            { title: '🌊 Portfolio', progress: 5 },
         ];
 
         const messages = [
-            { time: '04:15', agent: 'Nemo', msg: 'Components ready!' },
-            { time: '04:12', agent: 'Captain', msg: 'Great work, pod!' },
-            { time: '04:10', agent: 'Moby', msg: 'OAuth tokens working' },
-            { time: '04:08', agent: 'Pearl', msg: 'Docs updated ✓' },
+            { time: '09:42', agent: 'Alpha', msg: 'Arb opportunity found! +0.4%' },
+            { time: '09:41', agent: 'Capt', msg: 'Execute instantly.' },
+            { time: '09:40', agent: 'Doge', msg: 'New pair detected on Solana' },
+            { time: '09:38', agent: 'Beta', msg: 'Liquidity thin, careful' },
         ];
 
         const ocean = document.getElementById('ocean');
@@ -516,9 +561,9 @@
                 whale.id = 'whale-' + agent.id;
                 whale.style.left = agent.x + 'px';
                 whale.style.top = agent.y + 'px';
-                
-                const statusClass = agent.status === 'active' ? 'status-active' : 
-                                   agent.status === 'idle' ? 'status-idle' : 'status-done';
+
+                const statusClass = agent.status === 'active' ? 'status-active' :
+                    agent.status === 'idle' ? 'status-idle' : 'status-done';
 
                 whale.innerHTML = `
                     <div class="whale-status">
@@ -606,7 +651,7 @@
             if (!isPaused) {
                 agents.forEach(agent => {
                     agent.moveTimer++;
-                    
+
                     // Set new target every ~200 frames
                     if (agent.moveTimer > 150 + Math.random() * 100) {
                         agent.moveTimer = 0;
@@ -623,7 +668,7 @@
                         agent.y += dy;
                         whale.style.left = agent.x + 'px';
                         whale.style.top = agent.y + 'px';
-                        
+
                         // Flip whale based on direction
                         if (dx < -0.1) {
                             whale.style.transform = 'scaleX(-1)';
@@ -659,13 +704,13 @@
         }
 
         // Control buttons
-        document.getElementById('pauseBtn').addEventListener('click', function() {
+        document.getElementById('pauseBtn').addEventListener('click', function () {
             isPaused = !isPaused;
             this.textContent = isPaused ? '▶️ Resume' : '⏸️ Pause';
             this.classList.toggle('pause', !isPaused);
         });
 
-        document.getElementById('resetBtn').addEventListener('click', function() {
+        document.getElementById('resetBtn').addEventListener('click', function () {
             agents.forEach((agent, i) => {
                 agent.x = 100 + i * 80;
                 agent.y = 200 + (i % 3) * 100;
@@ -680,4 +725,5 @@
         window.addEventListener('load', init);
     </script>
 </body>
+
 </html>

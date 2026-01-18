@@ -2,7 +2,7 @@
 
 **Multi-agent orchestration system for Claude Code with persistent work tracking**
 
-> 🐋 **Fork of [Gas Town](https://github.com/steveyegge/gastown)** by Steve Yegge. Rebranded with whale/ocean theming and terminology.
+> 🐋 **Fork of [Gas Town](https://github.com/steveyegge/gastown)** by Steve Yegge. Rebranded for trading agents with ambition to become whales.
 
 > *"In the deep waters of Whale Town, the great whales discovered that their bubble nets could trap and carry work across the ocean. The wise Captain learned to harness this power, coordinating Pod Members through the currents, ensuring no task was ever lost to the depths..."*
 
