@@ -157,14 +157,55 @@ func (l *WebSocketListener) readLoop(ctx context.Context) {
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
 				return
 			}
-			// Try to reconnect
-			fmt.Printf("⚠️  WebSocket read error: %v (will reconnect)\n", err)
-			time.Sleep(5 * time.Second)
+			// Attempt to reconnect
+			fmt.Printf("⚠️  WebSocket error: %v (reconnecting...)\\n", err)
+			if reconnErr := l.reconnect(ctx); reconnErr != nil {
+				fmt.Printf("❌ Reconnect failed: %v\\n", reconnErr)
+				time.Sleep(10 * time.Second)
+			}
 			continue
 		}
 
 		l.handleMessage(message)
 	}
+}
+
+// reconnect closes the old connection and creates a new one.
+func (l *WebSocketListener) reconnect(ctx context.Context) error {
+	l.mu.Lock()
+	if l.conn != nil {
+		l.conn.Close()
+		l.conn = nil
+	}
+	l.mu.Unlock()
+
+	time.Sleep(2 * time.Second)
+
+	wsURL := l.config.SolanaWSURL
+	if wsURL == "" && l.config.HeliusAPIKey != "" {
+		wsURL = fmt.Sprintf("wss://mainnet.helius-rpc.com/?api-key=%s", l.config.HeliusAPIKey)
+	}
+
+	conn, _, err := websocket.DefaultDialer.DialContext(ctx, wsURL, nil)
+	if err != nil {
+		return err
+	}
+
+	l.mu.Lock()
+	l.conn = conn
+	l.mu.Unlock()
+
+	// Re-subscribe to all wallets
+	for _, wallet := range l.wallets {
+		if err := l.subscribeToWallet(wallet); err != nil {
+			fmt.Printf("⚠️ Re-subscribe failed for %s: %v\\n", wallet.Alias, err)
+		} else {
+			fmt.Printf("🔄 Re-subscribed to %s\\n", wallet.Alias)
+		}
+	}
+
+	fmt.Println("✅ WebSocket reconnected successfully")
+	return nil
 }
 
 // handleMessage processes incoming WebSocket messages.
