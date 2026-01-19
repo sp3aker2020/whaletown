@@ -77,7 +77,37 @@ func (l *WebSocketListener) Start(ctx context.Context) error {
 	// Listen for messages
 	go l.readLoop(ctx)
 
+	// Start ping keepalive
+	go l.pingLoop(ctx)
+
 	return nil
+}
+
+// pingLoop sends periodic pings to keep the connection alive.
+func (l *WebSocketListener) pingLoop(ctx context.Context) {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			l.mu.Lock()
+			if !l.running || l.conn == nil {
+				l.mu.Unlock()
+				return
+			}
+			conn := l.conn
+			l.mu.Unlock()
+
+			// Send ping
+			if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				fmt.Printf("⚠️ Ping failed: %v\n", err)
+				return
+			}
+		}
+	}
 }
 
 // subscribeToWallet sends a subscription request for a wallet.
@@ -119,8 +149,8 @@ func (l *WebSocketListener) readLoop(ctx context.Context) {
 		conn := l.conn
 		l.mu.Unlock()
 
-		// Set read deadline
-		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		// Set read deadline (longer than ping interval)
+		conn.SetReadDeadline(time.Now().Add(120 * time.Second))
 
 		_, message, err := conn.ReadMessage()
 		if err != nil {
