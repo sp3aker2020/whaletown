@@ -77,34 +77,34 @@ func (e *Executor) ExecuteCopyBuy(tokenMint string) (string, error) {
 	return sig.String(), nil
 }
 
+// ExecutionResult holds the result of a copy buy execution.
+type ExecutionResult struct {
+	TokenMint string
+	TxHash    string
+}
+
 // ProcessSignal analyzes a transaction signature and executes a copy trade if applicable.
-func (e *Executor) ProcessSignal(signature solana.Signature) error {
+// Returns the execution result if successful.
+func (e *Executor) ProcessSignal(signature solana.Signature) (*ExecutionResult, error) {
 	ctx := context.Background()
 
 	// Fetch transaction
-	// Note: We need to handle retry logic potentially as it might not be immediately available on RPC
-	// But WS alert usually means it's processed.
 	tx, err := e.rpcClient.GetTransaction(ctx, signature, &rpc.GetTransactionOpts{
 		Commitment:                     rpc.CommitmentConfirmed,
 		MaxSupportedTransactionVersion: func(v uint64) *uint64 { return &v }(0),
 	})
 	if err != nil {
-		return fmt.Errorf("fetch tx failed: %w", err)
+		return nil, fmt.Errorf("fetch tx failed: %w", err)
 	}
 
 	if tx == nil || tx.Meta == nil {
-		return fmt.Errorf("tx meta missing")
+		return nil, fmt.Errorf("tx meta missing")
 	}
 
 	// Analyze balance changes to find what was bought
-	// Heuristic: Find a generic token (not SOL) where balance increased for the payer
-
-	// We iterate through PostTokenBalances
 	for _, balance := range tx.Meta.PostTokenBalances {
-		// Calculate change
 		preAmount := int64(0)
 
-		// Find matching pre-balance
 		for _, pre := range tx.Meta.PreTokenBalances {
 			if pre.AccountIndex == balance.AccountIndex {
 				if val, err := strconv.ParseInt(pre.UiTokenAmount.Amount, 10, 64); err == nil {
@@ -117,28 +117,24 @@ func (e *Executor) ProcessSignal(signature solana.Signature) error {
 		postAmount, _ := strconv.ParseInt(balance.UiTokenAmount.Amount, 10, 64)
 
 		if postAmount > preAmount {
-			// Balance increased. Is it a target token?
-			// Ignore WSOL (So111...)
+			// Ignore WSOL
 			if balance.Mint.String() == "So11111111111111111111111111111111111111112" {
 				continue
 			}
 
-			// Found a token increase! Copy it!
-			// Note: This matches ANY token increase in the tx.
-			// In a swap TX, usually only one token increases for the user.
 			mint := balance.Mint.String()
 			fmt.Printf("🎯 Signal Identified: Whale bought %s\n", mint)
 
-			sig, err := e.ExecuteCopyBuy(mint)
+			txSig, err := e.ExecuteCopyBuy(mint)
 			if err != nil {
-				return fmt.Errorf("copy buy execution failed: %w", err)
+				return nil, fmt.Errorf("copy buy execution failed: %w", err)
 			}
-			fmt.Printf("✅ Copy Trade Executed! Sig: %s\n", sig)
-			return nil
+			fmt.Printf("✅ Copy Trade Executed! Sig: %s\n", txSig)
+			return &ExecutionResult{TokenMint: mint, TxHash: txSig}, nil
 		}
 	}
 
-	return fmt.Errorf("no buy signal detected in tx")
+	return nil, fmt.Errorf("no buy signal detected in tx")
 }
 
 // Internal Jupiter helpers

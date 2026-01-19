@@ -47,7 +47,7 @@ func (l *WebSocketListener) Start(ctx context.Context) error {
 	if wsURL == "" {
 		// Use Helius WebSocket if available
 		if l.config.HeliusAPIKey != "" {
-			wsURL = fmt.Sprintf("wss://atlas-mainnet.helius-rpc.com?api-key=%s", l.config.HeliusAPIKey)
+			wsURL = fmt.Sprintf("wss://mainnet.helius-rpc.com/?api-key=%s", l.config.HeliusAPIKey)
 		} else {
 			return fmt.Errorf("no WebSocket URL configured (set SOLANA_WS_URL or HELIUS_API_KEY)")
 		}

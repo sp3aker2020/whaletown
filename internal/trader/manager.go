@@ -117,9 +117,23 @@ func (m *Manager) Start(agentType AgentType) error {
 					if sig, err := solana.SignatureFromBase58(trade.TxHash); err == nil {
 						// Execute in background to not block WS
 						go func() {
-							if err := agent.executor.ProcessSignal(sig); err != nil {
-								// Log error? For now silent or fmt
+							result, err := agent.executor.ProcessSignal(sig)
+							if err != nil {
 								fmt.Printf("❌ Fast Lane Error: %v\n", err)
+								return
+							}
+
+							// Emit executed trade to dashboard
+							if cb != nil && result != nil {
+								execTrade := common.Trade{
+									Type:        "Executed ✅",
+									TokenOut:    result.TokenMint,
+									TxHash:      result.TxHash,
+									Timestamp:   time.Now(),
+									WalletAlias: "Fast Lane",
+									Platform:    "solana",
+								}
+								cb(execTrade)
 							}
 						}()
 					}
