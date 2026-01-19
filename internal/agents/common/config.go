@@ -73,6 +73,12 @@ func DefaultTrackedWallets() []TrackedWallet {
 			Platform: "solana",
 			Notes:    "$1.3M profit, 52% win rate",
 		},
+		{
+			Address:  "27Fyd42KmGRmbZSRHSmT85mA8JJwH4aEfUExPJwKYUTN",
+			Alias:    "Test Wallet (User)",
+			Platform: "solana",
+			Notes:    "Manual test wallet for copy trading verification",
+		},
 		// Polymarket whale
 		{
 			Address:  "0x1234567890abcdef1234567890abcdef12345678",

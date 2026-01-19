@@ -206,5 +206,15 @@ func (r *Researcher) getKnownProfitableWallets() []WalletEntry {
 			Source:   "dune",
 			Platform: "solana",
 		},
+		{
+			Address:  "27Fyd42KmGRmbZSRHSmT85mA8JJwH4aEfUExPJwKYUTN",
+			Alias:    "Test Wallet (User)",
+			Score:    99,
+			Profit7d: 0,
+			WinRate:  1.0,
+			Trades:   0,
+			Source:   "manual",
+			Platform: "solana",
+		},
 	}
 }
