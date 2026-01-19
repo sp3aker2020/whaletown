@@ -158,9 +158,9 @@ func (l *WebSocketListener) readLoop(ctx context.Context) {
 				return
 			}
 			// Attempt to reconnect
-			fmt.Printf("⚠️  WebSocket error: %v (reconnecting...)\\n", err)
+			fmt.Printf("⚠️  WebSocket error: %v (reconnecting...)\n", err)
 			if reconnErr := l.reconnect(ctx); reconnErr != nil {
-				fmt.Printf("❌ Reconnect failed: %v\\n", reconnErr)
+				fmt.Printf("❌ Reconnect failed: %v\n", reconnErr)
 				time.Sleep(10 * time.Second)
 			}
 			continue
@@ -198,9 +198,9 @@ func (l *WebSocketListener) reconnect(ctx context.Context) error {
 	// Re-subscribe to all wallets
 	for _, wallet := range l.wallets {
 		if err := l.subscribeToWallet(wallet); err != nil {
-			fmt.Printf("⚠️ Re-subscribe failed for %s: %v\\n", wallet.Alias, err)
+			fmt.Printf("⚠️ Re-subscribe failed for %s: %v\n", wallet.Alias, err)
 		} else {
-			fmt.Printf("🔄 Re-subscribed to %s\\n", wallet.Alias)
+			fmt.Printf("🔄 Re-subscribed to %s\n", wallet.Alias)
 		}
 	}
 
